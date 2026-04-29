@@ -64,12 +64,13 @@ export class TaskPipeStorage {
   }
 
   private rowToRun(row: DbRow): RunRecord {
+    // These fields are NOT NULL in the schema; the assertion makes that explicit
     return {
-      id: row['id'] ?? '',
-      workflowName: row['workflow_name'] ?? '',
-      status: (row['status'] ?? 'pending') as RunStatus,
-      triggerType: row['trigger_type'] ?? '',
-      startedAt: row['started_at'] ?? '',
+      id: row['id']!,
+      workflowName: row['workflow_name']!,
+      status: row['status']! as RunStatus,
+      triggerType: row['trigger_type']!,
+      startedAt: row['started_at']!,
       completedAt: row['completed_at'] ?? undefined,
       error: row['error'] ?? undefined,
     };
@@ -106,15 +107,16 @@ export class TaskPipeStorage {
     const rows = this.db
       .prepare('SELECT * FROM step_runs WHERE run_id = ? ORDER BY started_at ASC')
       .all(runId) as DbRow[];
+    // Fields marked NOT NULL in schema; assertions confirm they are never null
     return rows.map(r => ({
-      id: r['id'] ?? '',
-      runId: r['run_id'] ?? '',
-      stepId: r['step_id'] ?? '',
-      stepType: r['step_type'] ?? '',
-      status: (r['status'] ?? 'pending') as RunStatus,
+      id: r['id']!,
+      runId: r['run_id']!,
+      stepId: r['step_id']!,
+      stepType: r['step_type']!,
+      status: r['status']! as RunStatus,
       input: r['input'] ?? undefined,
       output: r['output'] ?? undefined,
-      startedAt: r['started_at'] ?? '',
+      startedAt: r['started_at']!,
       completedAt: r['completed_at'] ?? undefined,
       error: r['error'] ?? undefined,
     }));
