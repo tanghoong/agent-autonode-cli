@@ -1,4 +1,4 @@
-# TaskPipe
+# Autonode
 
 > **A YAML-driven workflow automation CLI powered by AI** — define pipelines in plain YAML, run them on a schedule, trigger them via webhook, or generate them from natural language using an LLM.
 
@@ -31,7 +31,7 @@
 
 ## Overview
 
-**TaskPipe** is a developer-friendly automation engine that lets you orchestrate multi-step workflows using simple YAML files. Each workflow is a sequence of *steps*, where each step calls a *connector* — a typed, reusable action such as making an HTTP request, reading a file, calling an AI model, or evaluating a condition.
+**Autonode** is a developer-friendly automation engine that lets you orchestrate multi-step workflows using simple YAML files. Each workflow is a sequence of *steps*, where each step calls a *connector* — a typed, reusable action such as making an HTTP request, reading a file, calling an AI model, or evaluating a condition.
 
 ```
 ┌─────────────┐   YAML   ┌──────────────────┐   Steps   ┌────────────────────┐
@@ -65,17 +65,17 @@
 | **LLM / AI** | OpenAI-compatible API, text & JSON output modes, AI workflow generation from natural language |
 | **CLI Commands (8)** | `init`, `run`, `validate`, `logs`, `secrets`, `webhook`, `schedule`, `ai` |
 | **Storage** | SQLite persistence for run history and step-level audit trail |
-| **Secrets** | File-based secret store (`~/.taskpipe/secrets.json`), accessible in templates via `{{ secrets.KEY }}` |
+| **Secrets** | File-based secret store (`~/.autonode/secrets.json`), accessible in templates via `{{ secrets.KEY }}` |
 | **DevOps** | Dockerfile, docker-compose, GitHub Actions CI |
 
 ---
 
 ## Architecture
 
-TaskPipe is a **pnpm monorepo** composed of focused packages:
+Autonode is a **pnpm monorepo** composed of focused packages:
 
 ```
-taskpipe/
+autonode/
 ├── apps/
 │   └── cli/               # Commander.js CLI — 8 commands
 └── packages/
@@ -89,7 +89,7 @@ taskpipe/
 **Data flow for a single workflow run:**
 
 ```
-taskpipe run workflow.yaml
+autonode run workflow.yaml
         │
         ▼
   engine: parse & validate YAML
@@ -116,9 +116,9 @@ taskpipe run workflow.yaml
 ### From npm (once published)
 
 ```bash
-npm install -g @taskpipe/cli
+npm install -g @autonode/cli
 # or
-pnpm add -g @taskpipe/cli
+pnpm add -g @autonode/cli
 ```
 
 ### From source
@@ -138,19 +138,19 @@ node apps/cli/dist/index.js --help
 
 ```bash
 # 1. Initialise a new project
-taskpipe init
+autonode init
 
 # 2. Set an API key (for AI steps)
-taskpipe secrets set OPENAI_API_KEY sk-...
+autonode secrets set OPENAI_API_KEY sk-...
 
 # 3. Validate your workflow
-taskpipe validate workflows/my-workflow.yaml
+autonode validate workflows/my-workflow.yaml
 
 # 4. Run it
-taskpipe run workflows/my-workflow.yaml
+autonode run workflows/my-workflow.yaml
 
 # 5. Inspect the execution log
-taskpipe logs
+autonode logs
 ```
 
 ---
@@ -159,16 +159,16 @@ taskpipe logs
 
 | Command | Description |
 |---|---|
-| `taskpipe init [--name <n>] [--dir <d>]` | Scaffold a new project with an example workflow |
-| `taskpipe run <workflow> [--dry-run] [--db <path>]` | Execute a workflow file |
-| `taskpipe validate <workflow>` | Validate YAML syntax and schema |
-| `taskpipe logs [--run <id>]` | List all runs or view a specific run's step details |
-| `taskpipe secrets set <key> <value>` | Store a secret |
-| `taskpipe secrets list` | List stored secret keys |
-| `taskpipe secrets remove <key>` | Delete a secret |
-| `taskpipe webhook start [--port <p>]` | Start an HTTP webhook server |
-| `taskpipe schedule start [--dir <d>]` | Start the cron scheduler for all workflows in a directory |
-| `taskpipe ai "<prompt>" [--output <file>] [--model <m>]` | Generate a workflow YAML from natural language |
+| `autonode init [--name <n>] [--dir <d>]` | Scaffold a new project with an example workflow |
+| `autonode run <workflow> [--dry-run] [--db <path>]` | Execute a workflow file |
+| `autonode validate <workflow>` | Validate YAML syntax and schema |
+| `autonode logs [--run <id>]` | List all runs or view a specific run's step details |
+| `autonode secrets set <key> <value>` | Store a secret |
+| `autonode secrets list` | List stored secret keys |
+| `autonode secrets remove <key>` | Delete a secret |
+| `autonode webhook start [--port <p>]` | Start an HTTP webhook server |
+| `autonode schedule start [--dir <d>]` | Start the cron scheduler for all workflows in a directory |
+| `autonode ai "<prompt>" [--output <file>] [--model <m>]` | Generate a workflow YAML from natural language |
 
 ### Webhook server endpoints
 
@@ -358,7 +358,7 @@ Six ready-to-use examples are included in the `examples/` directory:
 Run any example:
 
 ```bash
-taskpipe run examples/daily-ai-summary.yaml
+autonode run examples/daily-ai-summary.yaml
 ```
 
 ---
@@ -368,8 +368,8 @@ taskpipe run examples/daily-ai-summary.yaml
 ### Build and run with Docker
 
 ```bash
-docker build -t taskpipe .
-docker run --rm taskpipe validate workflows/my-workflow.yaml
+docker build -t autonode .
+docker run --rm autonode validate workflows/my-workflow.yaml
 ```
 
 ### Local development with docker-compose
@@ -385,15 +385,15 @@ docker-compose up
 ```
 agent-autonode-cli/
 ├── apps/
-│   └── cli/                   # @taskpipe/cli — CLI entry point
+│   └── cli/                   # @autonode/cli — CLI entry point
 │       └── src/commands/      # init, run, validate, logs, secrets,
 │                              #   webhook, schedule, ai
 ├── packages/
-│   ├── shared/                # @taskpipe/shared — types & schemas (Zod)
-│   ├── engine/                # @taskpipe/engine — parser, executor, interpolation
-│   ├── connectors/            # @taskpipe/connectors — 7 built-in connectors
-│   ├── storage/               # @taskpipe/storage — SQLite run/step persistence
-│   └── agent/                 # @taskpipe/agent — LLM client
+│   ├── shared/                # @autonode/shared — types & schemas (Zod)
+│   ├── engine/                # @autonode/engine — parser, executor, interpolation
+│   ├── connectors/            # @autonode/connectors — 7 built-in connectors
+│   ├── storage/               # @autonode/storage — SQLite run/step persistence
+│   └── agent/                 # @autonode/agent — LLM client
 ├── examples/                  # 6 example workflow YAML files
 ├── docs/                      # Extended documentation
 │   ├── quickstart.md
