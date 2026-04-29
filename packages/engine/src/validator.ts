@@ -1,5 +1,4 @@
-import { WorkflowSchema } from '@taskpipe/shared';
-import { WorkflowDefinition } from '@taskpipe/shared';
+import { WorkflowSchema, WorkflowDefinition } from '@taskpipe/shared';
 import { ValidationError } from './errors';
 
 export function validateWorkflow(workflow: unknown): WorkflowDefinition {

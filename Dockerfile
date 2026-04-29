@@ -11,7 +11,9 @@ COPY apps/ ./apps/
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
-RUN pnpm add -g @taskpipe/cli
+# Create a wrapper script pointing to the locally-built CLI
+RUN printf '#!/bin/sh\nexec node /app/apps/cli/dist/index.js "$@"\n' > /usr/local/bin/taskpipe \
+    && chmod +x /usr/local/bin/taskpipe
 
 WORKDIR /workspace
 

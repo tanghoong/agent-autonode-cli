@@ -1,5 +1,5 @@
 import { ConnectorType } from '@taskpipe/shared';
-import { ConnectorRegistry } from '@taskpipe/engine';
+import { ConnectorRegistry, ConnectorFn } from '@taskpipe/engine';
 import { httpRequest } from './http-request';
 import { logConnector } from './log';
 import { condition } from './condition';
@@ -17,7 +17,7 @@ export { fileRead } from './file-read';
 export { fileWrite } from './file-write';
 
 export function createDefaultRegistry(): ConnectorRegistry {
-  const registry = new Map();
+  const registry = new Map<string, ConnectorFn>();
   registry.set(ConnectorType.HttpRequest, httpRequest);
   registry.set(ConnectorType.Log, logConnector);
   registry.set(ConnectorType.Condition, condition);

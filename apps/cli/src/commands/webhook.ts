@@ -1,7 +1,10 @@
+import * as path from 'path';
 import chalk from 'chalk';
 import { TaskPipeStorage } from '@taskpipe/storage';
 import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@taskpipe/engine';
 import { createDefaultRegistry } from '@taskpipe/connectors';
+
+const WORKFLOWS_BASE_DIR = path.resolve(process.cwd(), 'workflows');
 
 export function registerWebhookCommand(program: import('commander').Command): void {
   const webhook = program.command('webhook').description('Webhook server commands');
@@ -40,9 +43,17 @@ export function registerWebhookCommand(program: import('commander').Command): vo
         res.json({ status: 'accepted', workflowId });
       });
 
-      // Workflow execution endpoint
+      // Workflow execution endpoint - workflowFile is restricted to the workflows directory
       app.post('/run/:workflowFile', async (req, res) => {
         const { workflowFile } = req.params;
+
+        // Prevent path traversal: resolve to an absolute path and confirm it stays within the base dir
+        const safeWorkflowPath = path.resolve(WORKFLOWS_BASE_DIR, workflowFile);
+        if (!safeWorkflowPath.startsWith(WORKFLOWS_BASE_DIR + path.sep) && safeWorkflowPath !== WORKFLOWS_BASE_DIR) {
+          res.status(400).json({ error: 'Invalid workflow path' });
+          return;
+        }
+
         const body = req.body as Record<string, unknown>;
         const headers: Record<string, string> = {};
         for (const [k, v] of Object.entries(req.headers)) {
@@ -54,7 +65,7 @@ export function registerWebhookCommand(program: import('commander').Command): vo
         }
 
         try {
-          const workflow = validateWorkflow(parseWorkflowFile(workflowFile));
+          const workflow = validateWorkflow(parseWorkflowFile(safeWorkflowPath));
           const run = storage.createRun(workflow.name, 'webhook.trigger');
           storage.updateRun(run.id, 'running');
 

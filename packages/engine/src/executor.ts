@@ -1,5 +1,5 @@
 import { WorkflowDefinition, WorkflowContext, StepResult, StepDefinition, logger } from '@taskpipe/shared';
-import { interpolateObject } from './interpolation';
+import { interpolateObject, interpolate } from './interpolation';
 import { addStepResult } from './context';
 import { ExecutionError, TimeoutError, ConnectorNotFoundError } from './errors';
 
@@ -62,6 +62,18 @@ export async function executeWorkflow(
 
   for (const step of workflow.steps) {
     logger.info(`Executing step: ${step.id} (${step.type})`);
+
+    // Evaluate step condition before running – skip step if condition is falsy
+    if (step.condition) {
+      const evaluatedCondition = interpolate(step.condition, currentContext);
+      const lower = evaluatedCondition.trim().toLowerCase();
+      const conditionMet =
+        lower !== 'false' && lower !== '0' && lower !== 'no' && lower !== '';
+      if (!conditionMet) {
+        logger.info(`Skipping step '${step.id}': condition '${step.condition}' evaluated to false`);
+        continue;
+      }
+    }
 
     const connector = connectors.get(step.type);
     if (!connector) {

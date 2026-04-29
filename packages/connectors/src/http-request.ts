@@ -19,7 +19,8 @@ export async function httpRequest(
   let fullUrl = url;
   if (query && Object.keys(query).length > 0) {
     const params = new URLSearchParams(query);
-    fullUrl = `${url}?${params.toString()}`;
+    const separator = url.includes('?') ? '&' : '?';
+    fullUrl = `${url}${separator}${params.toString()}`;
   }
 
   const fetchOptions: RequestInit = {

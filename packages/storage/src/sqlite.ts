@@ -8,6 +8,8 @@ import { RunRecord, StepRecord, RunStatus } from '@taskpipe/shared';
 const DEFAULT_DB_DIR = path.join(os.homedir(), '.taskpipe');
 const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, 'taskpipe.db');
 
+type DbRow = Record<string, string | null>;
+
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -49,7 +51,7 @@ export class TaskPipeStorage {
   }
 
   getRun(id: string): RunRecord | undefined {
-    const row = this.db.prepare('SELECT * FROM workflow_runs WHERE id = ?').get(id) as Record<string, string> | undefined;
+    const row = this.db.prepare('SELECT * FROM workflow_runs WHERE id = ?').get(id) as DbRow | undefined;
     if (!row) return undefined;
     return this.rowToRun(row);
   }
@@ -57,17 +59,17 @@ export class TaskPipeStorage {
   listRuns(limit = 20): RunRecord[] {
     const rows = this.db
       .prepare('SELECT * FROM workflow_runs ORDER BY started_at DESC LIMIT ?')
-      .all(limit) as Record<string, string>[];
+      .all(limit) as DbRow[];
     return rows.map(r => this.rowToRun(r));
   }
 
-  private rowToRun(row: Record<string, string>): RunRecord {
+  private rowToRun(row: DbRow): RunRecord {
     return {
-      id: row['id'],
-      workflowName: row['workflow_name'],
-      status: row['status'] as RunStatus,
-      triggerType: row['trigger_type'],
-      startedAt: row['started_at'],
+      id: row['id'] ?? '',
+      workflowName: row['workflow_name'] ?? '',
+      status: (row['status'] ?? 'pending') as RunStatus,
+      triggerType: row['trigger_type'] ?? '',
+      startedAt: row['started_at'] ?? '',
       completedAt: row['completed_at'] ?? undefined,
       error: row['error'] ?? undefined,
     };
@@ -103,16 +105,16 @@ export class TaskPipeStorage {
   listStepRuns(runId: string): StepRecord[] {
     const rows = this.db
       .prepare('SELECT * FROM step_runs WHERE run_id = ? ORDER BY started_at ASC')
-      .all(runId) as Record<string, string>[];
+      .all(runId) as DbRow[];
     return rows.map(r => ({
-      id: r['id'],
-      runId: r['run_id'],
-      stepId: r['step_id'],
-      stepType: r['step_type'],
-      status: r['status'] as RunStatus,
+      id: r['id'] ?? '',
+      runId: r['run_id'] ?? '',
+      stepId: r['step_id'] ?? '',
+      stepType: r['step_type'] ?? '',
+      status: (r['status'] ?? 'pending') as RunStatus,
       input: r['input'] ?? undefined,
       output: r['output'] ?? undefined,
-      startedAt: r['started_at'],
+      startedAt: r['started_at'] ?? '',
       completedAt: r['completed_at'] ?? undefined,
       error: r['error'] ?? undefined,
     }));

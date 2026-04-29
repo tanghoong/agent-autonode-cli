@@ -19,7 +19,7 @@ function saveSecrets(secrets: Record<string, string>): void {
   if (!fs.existsSync(SECRETS_DIR)) {
     fs.mkdirSync(SECRETS_DIR, { recursive: true });
   }
-  fs.writeFileSync(SECRETS_FILE, JSON.stringify(secrets, null, 2));
+  fs.writeFileSync(SECRETS_FILE, JSON.stringify(secrets, null, 2), { mode: 0o600 });
 }
 
 export function registerSecretsCommand(program: import('commander').Command): void {
