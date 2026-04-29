@@ -1,0 +1,31 @@
+name: local-markdown-summarizer
+
+steps:
+  - id: read_file
+    type: file.read
+    with:
+      path: "./README.md"
+
+  - id: summarize
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      prompt: |
+        Summarize the following markdown document in 3-5 sentences:
+        {{ steps.read_file.output }}
+      output:
+        format: text
+
+  - id: save_summary
+    type: file.write
+    with:
+      path: "./SUMMARY.md"
+      content: |
+        # Summary
+
+        {{ steps.summarize.output }}
+
+  - id: log_done
+    type: log
+    with:
+      message: "Summary saved to SUMMARY.md"

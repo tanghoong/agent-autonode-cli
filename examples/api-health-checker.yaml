@@ -1,0 +1,35 @@
+name: api-health-checker
+
+trigger:
+  type: schedule.trigger
+  with:
+    cron: "*/5 * * * *"
+
+steps:
+  - id: check_api
+    type: http.request
+    timeout: 10000
+    retry:
+      attempts: 2
+      delay: 2000
+    with:
+      method: GET
+      url: "https://api.example.com/health"
+
+  - id: log_status
+    type: log
+    with:
+      message: "API health check: {{ steps.check_api.status }}"
+
+  - id: alert_if_down
+    type: condition
+    with:
+      if: "{{ steps.check_api.status }} != 200"
+
+  - id: send_alert
+    type: http.request
+    with:
+      method: POST
+      url: "https://hooks.slack.com/services/{{ secrets.SLACK_WEBHOOK }}"
+      body:
+        text: "⚠️ API is down! Status: {{ steps.check_api.status }}"
