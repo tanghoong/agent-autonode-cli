@@ -1,0 +1,18 @@
+{
+  "name": "@taskpipe/connectors",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@taskpipe/shared": "workspace:*",
+    "@taskpipe/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
+  }
+}

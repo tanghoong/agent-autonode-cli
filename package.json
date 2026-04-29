@@ -1,0 +1,14 @@
+{
+  "name": "taskpipe",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

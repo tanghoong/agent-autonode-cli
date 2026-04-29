@@ -1,0 +1,35 @@
+name: form-submission-router
+
+trigger:
+  type: webhook.trigger
+  with:
+    path: /webhook/form
+
+steps:
+  - id: log_submission
+    type: log
+    with:
+      message: "Form submission from {{ trigger.body.email }} - type: {{ trigger.body.type }}"
+
+  - id: transform_data
+    type: transform.json
+    with:
+      input: "{{ trigger.body }}"
+      template:
+        to: "{{ trigger.body.email }}"
+        subject: "Form submission received"
+        type: "{{ trigger.body.type }}"
+
+  - id: route_request
+    type: condition
+    with:
+      if: "{{ trigger.body.type }} == 'support'"
+
+  - id: notify_team
+    type: http.request
+    with:
+      method: POST
+      url: "{{ env.NOTIFICATION_WEBHOOK_URL }}"
+      body:
+        message: "New {{ trigger.body.type }} request from {{ trigger.body.email }}"
+        data: "{{ trigger.body }}"

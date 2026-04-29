@@ -1,0 +1,35 @@
+name: daily-ai-summary
+
+trigger:
+  type: schedule.trigger
+  with:
+    cron: "0 9 * * *"
+
+steps:
+  - id: fetch_data
+    type: http.request
+    with:
+      method: GET
+      url: "https://api.example.com/sales"
+
+  - id: summarize
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      prompt: |
+        Summarize the following sales data into 5 bullet points:
+        {{ steps.fetch_data.body }}
+      output:
+        format: text
+
+  - id: send_report
+    type: http.request
+    retry:
+      attempts: 3
+      delay: 5000
+    timeout: 30000
+    with:
+      method: POST
+      url: "https://example.com/webhook/report"
+      body:
+        text: "{{ steps.summarize.output }}"

@@ -1,0 +1,31 @@
+name: webhook-feedback
+
+trigger:
+  type: webhook.trigger
+  with:
+    path: /webhook/feedback
+
+steps:
+  - id: log_received
+    type: log
+    with:
+      message: "Received feedback from {{ trigger.body.email }}"
+
+  - id: analyze_sentiment
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      prompt: |
+        Analyze the sentiment of this feedback and respond with a JSON object:
+        {{ trigger.body.message }}
+      output:
+        format: json
+
+  - id: send_acknowledgment
+    type: http.request
+    with:
+      method: POST
+      url: "{{ trigger.body.callbackUrl }}"
+      body:
+        sentiment: "{{ steps.analyze_sentiment.output }}"
+        received: true

@@ -1,0 +1,38 @@
+name: github-issue-triage
+
+trigger:
+  type: webhook.trigger
+  with:
+    path: /webhook/github
+
+steps:
+  - id: log_issue
+    type: log
+    with:
+      message: "New GitHub issue: {{ trigger.body.issue.title }}"
+
+  - id: classify_issue
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      systemPrompt: "You are a GitHub issue classifier. Classify issues into: bug, feature, documentation, question."
+      prompt: |
+        Classify this GitHub issue:
+        Title: {{ trigger.body.issue.title }}
+        Body: {{ trigger.body.issue.body }}
+
+        Respond with JSON: { "label": "bug|feature|documentation|question", "priority": "high|medium|low", "summary": "one sentence" }
+      output:
+        format: json
+
+  - id: add_label
+    type: http.request
+    with:
+      method: POST
+      url: "https://api.github.com/repos/{{ trigger.body.repository.full_name }}/issues/{{ trigger.body.issue.number }}/labels"
+      headers:
+        Authorization: "Bearer {{ secrets.GITHUB_TOKEN }}"
+        Accept: "application/vnd.github.v3+json"
+      body:
+        labels:
+          - "{{ steps.classify_issue.output.label }}"
