@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { TaskPipeStorage } from '@taskpipe/storage';
 import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@taskpipe/engine';
 import { createDefaultRegistry } from '@taskpipe/connectors';
+import { loadSecrets } from '../utils/secrets';
 
 const WORKFLOWS_BASE_DIR = path.resolve(process.cwd(), 'workflows');
 
@@ -69,7 +70,7 @@ export function registerWebhookCommand(program: import('commander').Command): vo
           const run = storage.createRun(workflow.name, 'webhook.trigger');
           storage.updateRun(run.id, 'running');
 
-          const context = createInitialContext({ body, headers, query });
+          const context = createInitialContext({ body, headers, query }, loadSecrets());
           const connectors = createDefaultRegistry();
 
           // Run async

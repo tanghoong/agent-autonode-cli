@@ -1,20 +1,9 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { OpenAICompatibleProvider } from '@taskpipe/agent';
-
-const SECRETS_FILE = path.join(os.homedir(), '.taskpipe', 'secrets.json');
-
-function loadSecrets(): Record<string, string> {
-  if (!fs.existsSync(SECRETS_FILE)) return {};
-  try {
-    return JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf-8')) as Record<string, string>;
-  } catch {
-    return {};
-  }
-}
+import { loadSecrets } from '../utils/secrets';
 
 const SYSTEM_PROMPT = `You are an expert at creating TaskPipe workflow YAML files.
 TaskPipe is a CLI automation engine that runs workflows defined in YAML.

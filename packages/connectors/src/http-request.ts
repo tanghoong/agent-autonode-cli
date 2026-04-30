@@ -1,18 +1,21 @@
 import { WorkflowContext, StepResult } from '@taskpipe/shared';
 
+const DEFAULT_TIMEOUT_MS = 30_000;
+
 interface HttpRequestConfig {
   method?: string;
   url: string;
   headers?: Record<string, string>;
   body?: unknown;
   query?: Record<string, string>;
+  timeout?: number;
 }
 
 export async function httpRequest(
   config: Record<string, unknown>,
   _context: WorkflowContext
 ): Promise<StepResult> {
-  const { method = 'GET', url, headers = {}, body, query } = config as unknown as HttpRequestConfig;
+  const { method = 'GET', url, headers = {}, body, query, timeout = DEFAULT_TIMEOUT_MS } = config as unknown as HttpRequestConfig;
 
   if (!url) throw new Error('http.request: url is required');
 
@@ -23,23 +26,41 @@ export async function httpRequest(
     fullUrl = `${url}${separator}${params.toString()}`;
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
   const fetchOptions: RequestInit = {
     method: method.toUpperCase(),
     headers: { 'Content-Type': 'application/json', ...headers },
+    signal: controller.signal,
   };
 
   if (body && method.toUpperCase() !== 'GET') {
     fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  const response = await fetch(fullUrl, fetchOptions);
-  const responseText = await response.text();
-
-  let responseBody: unknown;
+  let response: Response;
   try {
-    responseBody = JSON.parse(responseText);
-  } catch {
-    responseBody = responseText;
+    response = await fetch(fullUrl, fetchOptions);
+  } catch (err) {
+    clearTimeout(timer);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`http.request: Request timed out after ${timeout}ms (url: ${fullUrl})`);
+    }
+    throw new Error(`http.request: Network error - ${(err as Error).message} (url: ${fullUrl})`);
+  }
+  clearTimeout(timer);
+
+  const contentType = response.headers.get('content-type') ?? '';
+  let responseBody: unknown;
+  if (contentType.includes('application/json')) {
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = await response.text();
+    }
+  } else {
+    responseBody = await response.text();
   }
 
   return {
