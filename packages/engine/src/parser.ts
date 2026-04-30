@@ -21,7 +21,7 @@ export function parseWorkflowYaml(yamlContent: string): WorkflowDefinition {
     throw new ParseError(`Failed to parse YAML: ${(err as Error).message}`);
   }
 
-  if (!parsed || typeof parsed !== 'object') {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new ParseError('Workflow YAML must be a non-empty object');
   }
 
