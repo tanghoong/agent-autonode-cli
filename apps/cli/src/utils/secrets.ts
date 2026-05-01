@@ -42,7 +42,6 @@ export function loadOrCreateKey(): Buffer {
   }
   const key = crypto.randomBytes(KEY_LENGTH);
   fs.writeFileSync(KEY_FILE, key, { mode: 0o600 });
-  fs.chmodSync(KEY_FILE, 0o600);
   return key;
 }
 

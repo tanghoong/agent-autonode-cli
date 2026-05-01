@@ -26,7 +26,7 @@ function safeResolvePath(filePath: string): string {
   const resolvedPath = path.resolve(allowedRoot, filePath);
   const relativePath = path.relative(allowedRoot, resolvedPath);
 
-  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+  if (relativePath.startsWith('..')) {
     throw new Error('file.write: path must stay within the working directory');
   }
 

@@ -21,7 +21,7 @@ function safeResolvePath(filePath: string): string {
   const resolvedPath = path.resolve(baseDir, filePath);
   const relativePath = path.relative(baseDir, resolvedPath);
 
-  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+  if (relativePath.startsWith('..')) {
     throw new Error('file.read: path must stay within the current working directory');
   }
 
