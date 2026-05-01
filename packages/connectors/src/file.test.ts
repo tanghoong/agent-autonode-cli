@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -18,9 +18,12 @@ describe('file.read connector', () => {
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'taskpipe-test-'));
+    // Make cwd point to tmpDir so absolute paths within it pass the traversal check
+    vi.spyOn(process, 'cwd').mockReturnValue(tmpDir);
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -32,18 +35,28 @@ describe('file.read connector', () => {
     expect(result.output).toBe('hello world');
   });
 
+  it('reads a file using a relative path', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'rel.txt'), 'relative');
+    const result = await fileRead({ path: 'rel.txt' }, emptyContext);
+    expect(result.output).toBe('relative');
+  });
+
   it('throws when path is missing', async () => {
     await expect(fileRead({}, emptyContext)).rejects.toThrow(/path is required/);
   });
 
   it('throws on null bytes in path', async () => {
-    await expect(fileRead({ path: '/tmp/file\0evil' }, emptyContext)).rejects.toThrow(/null bytes/);
+    await expect(fileRead({ path: 'file\0evil' }, emptyContext)).rejects.toThrow(/null bytes/);
+  });
+
+  it('throws on path traversal outside cwd', async () => {
+    await expect(fileRead({ path: '../../etc/passwd' }, emptyContext)).rejects.toThrow(
+      /must stay within the current working directory/
+    );
   });
 
   it('throws when file does not exist', async () => {
-    await expect(
-      fileRead({ path: path.join(tmpDir, 'nonexistent.txt') }, emptyContext)
-    ).rejects.toThrow();
+    await expect(fileRead({ path: 'nonexistent.txt' }, emptyContext)).rejects.toThrow();
   });
 });
 
@@ -52,30 +65,31 @@ describe('file.write connector', () => {
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'taskpipe-test-'));
+    // Make cwd point to tmpDir so relative paths resolve there
+    vi.spyOn(process, 'cwd').mockReturnValue(tmpDir);
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('writes content to a file and returns the resolved path', async () => {
-    const filePath = path.join(tmpDir, 'output.txt');
-    const result = await fileWrite({ path: filePath, content: 'written content' }, emptyContext);
-    expect(result.output).toBe(filePath);
-    expect(fs.readFileSync(filePath, 'utf-8')).toBe('written content');
+  it('writes content to a file using a relative path', async () => {
+    const result = await fileWrite({ path: 'output.txt', content: 'written content' }, emptyContext);
+    const expectedPath = path.join(tmpDir, 'output.txt');
+    expect(result.output).toBe(expectedPath);
+    expect(fs.readFileSync(expectedPath, 'utf-8')).toBe('written content');
   });
 
   it('creates parent directories if they do not exist', async () => {
-    const filePath = path.join(tmpDir, 'nested', 'dir', 'file.txt');
-    await fileWrite({ path: filePath, content: 'nested' }, emptyContext);
-    expect(fs.existsSync(filePath)).toBe(true);
+    await fileWrite({ path: 'nested/dir/file.txt', content: 'nested' }, emptyContext);
+    expect(fs.existsSync(path.join(tmpDir, 'nested', 'dir', 'file.txt'))).toBe(true);
   });
 
   it('appends content when append=true', async () => {
-    const filePath = path.join(tmpDir, 'append.txt');
-    fs.writeFileSync(filePath, 'first');
-    await fileWrite({ path: filePath, content: 'second', append: true }, emptyContext);
-    expect(fs.readFileSync(filePath, 'utf-8')).toBe('firstsecond');
+    fs.writeFileSync(path.join(tmpDir, 'append.txt'), 'first');
+    await fileWrite({ path: 'append.txt', content: 'second', append: true }, emptyContext);
+    expect(fs.readFileSync(path.join(tmpDir, 'append.txt'), 'utf-8')).toBe('firstsecond');
   });
 
   it('throws when path is missing', async () => {
@@ -83,13 +97,24 @@ describe('file.write connector', () => {
   });
 
   it('throws when content is missing', async () => {
-    const filePath = path.join(tmpDir, 'x.txt');
-    await expect(fileWrite({ path: filePath }, emptyContext)).rejects.toThrow(/content is required/);
+    await expect(fileWrite({ path: 'x.txt' }, emptyContext)).rejects.toThrow(/content is required/);
   });
 
   it('throws on null bytes in path', async () => {
     await expect(
-      fileWrite({ path: '/tmp/evil\0file', content: 'x' }, emptyContext)
+      fileWrite({ path: 'evil\0file', content: 'x' }, emptyContext)
     ).rejects.toThrow(/null bytes/);
+  });
+
+  it('throws on absolute paths', async () => {
+    await expect(
+      fileWrite({ path: '/etc/passwd', content: 'x' }, emptyContext)
+    ).rejects.toThrow(/absolute paths are not allowed/);
+  });
+
+  it('throws on path traversal outside cwd', async () => {
+    await expect(
+      fileWrite({ path: '../../etc/passwd', content: 'x' }, emptyContext)
+    ).rejects.toThrow(/must stay within the working directory/);
   });
 });

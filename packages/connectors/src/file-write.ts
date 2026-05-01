@@ -11,13 +11,26 @@ interface FileWriteConfig {
 
 /**
  * Resolves and validates a file path to prevent directory traversal attacks.
- * The resolved path must not contain null bytes.
+ * The resolved path must not contain null bytes and must stay within the
+ * current working directory.
  */
 function safeResolvePath(filePath: string): string {
   if (filePath.includes('\0')) {
     throw new Error('file.write: path must not contain null bytes');
   }
-  return path.resolve(process.cwd(), filePath);
+  if (path.isAbsolute(filePath)) {
+    throw new Error('file.write: absolute paths are not allowed');
+  }
+
+  const allowedRoot = path.resolve(process.cwd());
+  const resolvedPath = path.resolve(allowedRoot, filePath);
+  const relativePath = path.relative(allowedRoot, resolvedPath);
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    throw new Error('file.write: path must stay within the working directory');
+  }
+
+  return resolvedPath;
 }
 
 export async function fileWrite(

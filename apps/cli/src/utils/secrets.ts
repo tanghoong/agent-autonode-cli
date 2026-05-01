@@ -25,14 +25,24 @@ export function ensureSecretsDir(): void {
   }
 }
 
+function assertRegularFile(filePath: string): void {
+  const stats = fs.lstatSync(filePath);
+  if (!stats.isFile()) {
+    throw new Error(`Expected regular file at ${filePath}`);
+  }
+}
+
 export function loadOrCreateKey(): Buffer {
   ensureSecretsDir();
   if (fs.existsSync(KEY_FILE)) {
+    assertRegularFile(KEY_FILE);
+    fs.chmodSync(KEY_FILE, 0o600);
     const raw = fs.readFileSync(KEY_FILE);
     if (raw.length === KEY_LENGTH) return raw;
   }
   const key = crypto.randomBytes(KEY_LENGTH);
   fs.writeFileSync(KEY_FILE, key, { mode: 0o600 });
+  fs.chmodSync(KEY_FILE, 0o600);
   return key;
 }
 
@@ -69,6 +79,7 @@ function loadStore(): SecretsStore {
 export function saveStore(store: SecretsStore): void {
   ensureSecretsDir();
   fs.writeFileSync(SECRETS_FILE, JSON.stringify(store, null, 2), { mode: 0o600 });
+  fs.chmodSync(SECRETS_FILE, 0o600);
 }
 
 /** Load and decrypt all secrets, returning a plaintext key-value map. */

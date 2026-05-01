@@ -6,12 +6,12 @@
     "dev": "pnpm -r run dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint 'apps/**/*.ts' 'packages/**/*.ts'",
-    "format": "prettier --write 'apps/**/*.ts' 'packages/**/*.ts'",
-    "format:check": "prettier --check 'apps/**/*.ts' 'packages/**/*.ts'"
+    "lint": "eslint \"apps/**/*.ts\" \"packages/**/*.ts\"",
+    "format": "prettier --write \"apps/**/*.ts\" \"packages/**/*.ts\"",
+    "format:check": "prettier --check \"apps/**/*.ts\" \"packages/**/*.ts\""
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
   },
   "devDependencies": {

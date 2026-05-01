@@ -9,14 +9,23 @@ interface FileReadConfig {
 
 /**
  * Resolves and validates a file path to prevent directory traversal attacks.
- * The resolved path must not contain null bytes and must be an absolute path
- * produced by resolving against the current working directory.
+ * The resolved path must not contain null bytes and must remain within the
+ * current working directory after resolution.
  */
 function safeResolvePath(filePath: string): string {
   if (filePath.includes('\0')) {
     throw new Error('file.read: path must not contain null bytes');
   }
-  return path.resolve(process.cwd(), filePath);
+
+  const baseDir = path.resolve(process.cwd());
+  const resolvedPath = path.resolve(baseDir, filePath);
+  const relativePath = path.relative(baseDir, resolvedPath);
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    throw new Error('file.read: path must stay within the current working directory');
+  }
+
+  return resolvedPath;
 }
 
 export async function fileRead(
