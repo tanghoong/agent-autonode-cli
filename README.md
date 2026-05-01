@@ -422,15 +422,18 @@ agent-autonode-cli/
 - [x] Docker + GitHub Actions CI
 - [x] 6 example workflows
 
-### 🔄 v0.2 — Quality & Security
+### ✅ v0.2 — Quality & Security (current)
 
-- [ ] Unit tests for engine, connectors, and CLI commands
+- [x] Unit tests for engine components (interpolation, executor, parser, validator)
+- [x] Unit tests for connectors (condition, log, transform.json, http.request, file.read, file.write)
+- [x] ESLint + Prettier configuration
+- [x] Secrets encryption (AES-256-GCM via Node.js `crypto` — no third-party libs)
+- [x] Safe expression evaluator for `condition` connector (no `new Function()`)
+- [x] HTTP request timeout with `AbortController` (default 30 s)
+- [x] User-friendly HTTP network error messages
+- [x] Path traversal protection in `file.read` / `file.write`
+- [x] Secrets injected into workflow execution context (run, schedule, webhook)
 - [ ] Integration tests for end-to-end scenarios
-- [ ] ESLint + Prettier configuration
-- [ ] Secrets encryption (OS keychain / AES-256)
-- [ ] Safe expression evaluator for `condition` connector (replace `new Function()`)
-- [ ] HTTP request timeouts and improved network error messages
-- [ ] Path traversal protection in `file.read` / `file.write`
 
 ### 🚀 v0.3 — Extensibility
 

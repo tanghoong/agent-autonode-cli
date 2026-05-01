@@ -58,7 +58,7 @@ export async function condition(
   context: WorkflowContext
 ): Promise<StepResult> {
   const { if: ifExpr, then: thenBranch, else: elseBranch } = config as unknown as ConditionConfig;
-  if (!ifExpr) throw new Error('condition: if expression is required');
+  if (ifExpr === undefined || ifExpr === null) throw new Error('condition: if expression is required');
 
   const result = evaluateCondition(ifExpr, context);
   const branch = result ? thenBranch : elseBranch;

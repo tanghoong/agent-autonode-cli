@@ -1,26 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import chalk from 'chalk';
-
-const SECRETS_DIR = path.join(os.homedir(), '.taskpipe');
-const SECRETS_FILE = path.join(SECRETS_DIR, 'secrets.json');
-
-function loadSecrets(): Record<string, string> {
-  if (!fs.existsSync(SECRETS_FILE)) return {};
-  try {
-    return JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf-8')) as Record<string, string>;
-  } catch {
-    return {};
-  }
-}
-
-function saveSecrets(secrets: Record<string, string>): void {
-  if (!fs.existsSync(SECRETS_DIR)) {
-    fs.mkdirSync(SECRETS_DIR, { recursive: true });
-  }
-  fs.writeFileSync(SECRETS_FILE, JSON.stringify(secrets, null, 2), { mode: 0o600 });
-}
+import { loadSecrets, saveSecrets } from '../utils/secrets';
 
 export function registerSecretsCommand(program: import('commander').Command): void {
   const secrets = program.command('secrets').description('Manage secrets');

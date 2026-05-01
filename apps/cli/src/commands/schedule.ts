@@ -5,6 +5,7 @@ import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialCont
 import { createDefaultRegistry } from '@taskpipe/connectors';
 import { TaskPipeStorage } from '@taskpipe/storage';
 import { logger } from '@taskpipe/shared';
+import { loadSecrets } from '../utils/secrets';
 
 export function registerScheduleCommand(program: import('commander').Command): void {
   const schedule = program.command('schedule').description('Schedule runner commands');
@@ -38,7 +39,9 @@ export function registerScheduleCommand(program: import('commander').Command): v
 
           if (workflow.trigger?.type !== 'schedule.trigger') continue;
 
-          const cronExpr = workflow.trigger.with?.['cron'] as string | undefined;
+          const cronExpr = typeof workflow.trigger.with?.['cron'] === 'string'
+            ? workflow.trigger.with['cron']
+            : undefined;
           if (!cronExpr) {
             logger.warn(`Workflow '${workflow.name}' has schedule.trigger but no cron expression`);
             continue;
@@ -57,7 +60,7 @@ export function registerScheduleCommand(program: import('commander').Command): v
             storage.updateRun(run.id, 'running');
 
             try {
-              const context = createInitialContext();
+              const context = createInitialContext({}, loadSecrets());
               await executeWorkflow(workflow, context, connectors);
               storage.updateRun(run.id, 'success');
               logger.success(`Scheduled workflow '${workflow.name}' completed`);

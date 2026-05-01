@@ -169,7 +169,16 @@ This document tracks the implementation status of all planned features for the T
 - [x] `docs/agent-step.md` - Agent step guide
 - [x] Basic README.md
 
-## ✅ DevOps & Infrastructure
+## ✅ Security & Reliability (v0.2)
+
+- [x] Secrets encryption (AES-256-GCM via Node.js `crypto`)
+- [x] Safe expression evaluator for `condition` connector (no `new Function()`)
+- [x] HTTP request timeout with `AbortController` (default 30 s)
+- [x] User-friendly HTTP network error messages
+- [x] Path traversal protection in `file.read` / `file.write`
+- [x] Secrets injected into workflow execution context
+- [x] Safe runtime type check for cron expression in scheduler
+- [x] Parser rejects arrays at document root
 
 - [x] GitHub Actions CI workflow
   - [x] Build and type check
@@ -183,18 +192,16 @@ This document tracks the implementation status of all planned features for the T
 - [x] docker-compose.yml for local development
 - [x] .gitignore configuration
 
-## 🔄 Testing & Quality (Not in MVP)
+## ✅ Testing & Quality
 
-> Note: Unit tests are not included in the current MVP implementation
-
-- [ ] Unit tests for engine components
-- [ ] Unit tests for connectors
+- [x] Unit tests for engine components (interpolation, executor, parser, validator)
+- [x] Unit tests for connectors (condition, log, transform.json, http.request, file.read, file.write)
 - [ ] Unit tests for CLI commands
 - [ ] Integration tests for workflows
 - [ ] E2E tests for complete scenarios
 - [ ] Test coverage reporting
-- [ ] Linting configuration (ESLint)
-- [ ] Code formatting (Prettier)
+- [x] Linting configuration (ESLint with TypeScript support)
+- [x] Code formatting (Prettier)
 
 ## 📝 Implementation Notes
 

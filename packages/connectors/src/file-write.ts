@@ -9,6 +9,30 @@ interface FileWriteConfig {
   append?: boolean;
 }
 
+/**
+ * Resolves and validates a file path to prevent directory traversal attacks.
+ * The resolved path must not contain null bytes and must stay within the
+ * current working directory.
+ */
+function safeResolvePath(filePath: string): string {
+  if (filePath.includes('\0')) {
+    throw new Error('file.write: path must not contain null bytes');
+  }
+  if (path.isAbsolute(filePath)) {
+    throw new Error('file.write: absolute paths are not allowed');
+  }
+
+  const allowedRoot = path.resolve(process.cwd());
+  const resolvedPath = path.resolve(allowedRoot, filePath);
+  const relativePath = path.relative(allowedRoot, resolvedPath);
+
+  if (relativePath.startsWith('..')) {
+    throw new Error('file.write: path must stay within the working directory');
+  }
+
+  return resolvedPath;
+}
+
 export async function fileWrite(
   config: Record<string, unknown>,
   _context: WorkflowContext
@@ -17,16 +41,17 @@ export async function fileWrite(
   if (!filePath) throw new Error('file.write: path is required');
   if (content === undefined) throw new Error('file.write: content is required');
 
-  const dir = path.dirname(filePath);
+  const resolvedPath = safeResolvePath(filePath);
+  const dir = path.dirname(resolvedPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
   if (append) {
-    fs.appendFileSync(filePath, content, encoding);
+    fs.appendFileSync(resolvedPath, content, encoding);
   } else {
-    fs.writeFileSync(filePath, content, encoding);
+    fs.writeFileSync(resolvedPath, content, encoding);
   }
 
-  return { output: filePath };
+  return { output: resolvedPath };
 }

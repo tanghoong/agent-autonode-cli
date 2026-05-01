@@ -5,6 +5,7 @@ import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialCont
 import { createDefaultRegistry } from '@taskpipe/connectors';
 import { TaskPipeStorage } from '@taskpipe/storage';
 import { logger, StepResult } from '@taskpipe/shared';
+import { loadSecrets } from '../utils/secrets';
 
 export function registerRunCommand(program: import('commander').Command): void {
   program
@@ -33,7 +34,7 @@ export function registerRunCommand(program: import('commander').Command): void {
         console.log(chalk.dim(`Run ID: ${runRecord.id}`));
         console.log('');
 
-        const context = createInitialContext();
+        const context = createInitialContext({}, loadSecrets());
         const connectors = createDefaultRegistry();
 
         const stepRecords = new Map<string, string>();
