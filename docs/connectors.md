@@ -67,6 +67,34 @@ Transforms JSON data.
 
 Result: `{ output: <transformed> }`
 
+### JSONPath expressions
+
+Instead of a `template`, you can supply an `expression` that runs a JSONPath
+query against `input`. The result is **always an array of matches** (empty when
+nothing matches), so the output shape is predictable for any path.
+
+```yaml
+- id: active_names
+  type: transform.json
+  with:
+    input: "{{ steps.fetch.body }}"
+    expression: "$.items[?(@.active==true)].name"
+# output: ["alice", "carol"]
+```
+
+Supported syntax (a safe, eval-free subset):
+
+| Syntax | Meaning |
+|---|---|
+| `$` | the root value |
+| `.name` / `['name']` | member access (dot or bracket) |
+| `[n]` | array index (negative counts from the end) |
+| `[*]` / `.*` | wildcard — all array elements or object values |
+| `[?(@.path <op> lit)]` | filter array elements; `<op>` ∈ `=== !== == != >= <= > <`, `lit` ∈ `true`/`false`/`null`/number/`'string'` |
+
+If both `expression` and `template` are given, `expression` wins. Unsupported
+syntax raises a descriptive error rather than silently mis-evaluating.
+
 ## agent.prompt
 
 Calls an AI language model.

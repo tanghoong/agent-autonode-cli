@@ -438,9 +438,11 @@ agent-autonode-cli/
 ### 🚀 v0.3 — Extensibility
 
 - [ ] Plugin / custom connector system (load connectors from npm packages)
-- [ ] Step `condition` field evaluation (skip steps dynamically)
+- [x] Step `condition` field evaluation (skip steps dynamically)
 - [ ] Parallel step execution groups
-- [ ] `transform.json` with JSONPath / jq-style expressions
+- [x] `transform.json` with JSONPath expressions
+
+See [`docs/v0.3-scope.md`](docs/v0.3-scope.md) for the full v0.3 scope and plan.
 
 ### 🌐 v0.4 — Integrations & UX
 
