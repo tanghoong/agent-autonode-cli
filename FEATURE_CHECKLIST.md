@@ -197,8 +197,8 @@ This document tracks the implementation status of all planned features for the A
 - [x] Unit tests for engine components (interpolation, executor, parser, validator)
 - [x] Unit tests for connectors (condition, log, transform.json, http.request, file.read, file.write)
 - [ ] Unit tests for CLI commands
-- [ ] Integration tests for workflows
-- [ ] E2E tests for complete scenarios
+- [x] Integration tests for workflows
+- [x] E2E tests for complete scenarios
 - [ ] Test coverage reporting
 - [x] Linting configuration (ESLint with TypeScript support)
 - [x] Code formatting (Prettier)
