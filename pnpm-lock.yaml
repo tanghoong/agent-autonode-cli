@@ -29,19 +29,19 @@ importers:
 
   apps/cli:
     dependencies:
-      '@taskpipe/agent':
+      '@autonode/agent':
         specifier: workspace:*
         version: link:../../packages/agent
-      '@taskpipe/connectors':
+      '@autonode/connectors':
         specifier: workspace:*
         version: link:../../packages/connectors
-      '@taskpipe/engine':
+      '@autonode/engine':
         specifier: workspace:*
         version: link:../../packages/engine
-      '@taskpipe/shared':
+      '@autonode/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@taskpipe/storage':
+      '@autonode/storage':
         specifier: workspace:*
         version: link:../../packages/storage
       chalk:
@@ -81,7 +81,7 @@ importers:
 
   packages/agent:
     dependencies:
-      '@taskpipe/shared':
+      '@autonode/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -97,10 +97,10 @@ importers:
 
   packages/connectors:
     dependencies:
-      '@taskpipe/engine':
+      '@autonode/engine':
         specifier: workspace:*
         version: link:../engine
-      '@taskpipe/shared':
+      '@autonode/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -113,7 +113,7 @@ importers:
 
   packages/engine:
     dependencies:
-      '@taskpipe/shared':
+      '@autonode/shared':
         specifier: workspace:*
         version: link:../shared
       js-yaml:
@@ -151,7 +151,7 @@ importers:
 
   packages/storage:
     dependencies:
-      '@taskpipe/shared':
+      '@autonode/shared':
         specifier: workspace:*
         version: link:../shared
       better-sqlite3:

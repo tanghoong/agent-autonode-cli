@@ -1,4 +1,4 @@
-import { WorkflowContext } from '@taskpipe/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 function getNestedValue(obj: unknown, path: string[]): unknown {
   let current: unknown = obj;

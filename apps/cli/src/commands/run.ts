@@ -1,10 +1,10 @@
 import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@taskpipe/engine';
-import { createDefaultRegistry } from '@taskpipe/connectors';
-import { TaskPipeStorage } from '@taskpipe/storage';
-import { logger, StepResult } from '@taskpipe/shared';
+import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
+import { createDefaultRegistry } from '@autonode/connectors';
+import { AutonodeStorage } from '@autonode/storage';
+import { logger, StepResult } from '@autonode/shared';
 import { loadSecrets } from '../utils/secrets';
 
 export function registerRunCommand(program: import('commander').Command): void {
@@ -28,7 +28,7 @@ export function registerRunCommand(program: import('commander').Command): void {
           return;
         }
 
-        const storage = new TaskPipeStorage(options.db);
+        const storage = new AutonodeStorage(options.db);
         const runRecord = storage.createRun(workflow.name, workflow.trigger?.type ?? 'manual');
 
         console.log(chalk.dim(`Run ID: ${runRecord.id}`));

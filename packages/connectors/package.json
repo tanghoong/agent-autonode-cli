@@ -1,5 +1,5 @@
 {
-  "name": "@taskpipe/connectors",
+  "name": "@autonode/connectors",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,8 +8,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@taskpipe/shared": "workspace:*",
-    "@taskpipe/engine": "workspace:*"
+    "@autonode/shared": "workspace:*",
+    "@autonode/engine": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

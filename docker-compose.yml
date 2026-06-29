@@ -1,24 +1,24 @@
 version: '3.8'
 
 services:
-  taskpipe:
+  autonode:
     build: .
-    image: taskpipe:latest
+    image: autonode:latest
     volumes:
-      - ~/.taskpipe:/root/.taskpipe
+      - ~/.autonode:/root/.autonode
       - ./workflows:/workspace/workflows
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
 
-  taskpipe-webhook:
+  autonode-webhook:
     build: .
-    image: taskpipe:latest
+    image: autonode:latest
     command: ["webhook", "start", "--port", "3000"]
     ports:
       - "3000:3000"
     volumes:
-      - ~/.taskpipe:/root/.taskpipe
+      - ~/.autonode:/root/.autonode
       - ./workflows:/workspace/workflows
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}

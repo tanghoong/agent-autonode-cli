@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
 import * as fs from 'fs';
-import { WorkflowDefinition } from '@taskpipe/shared';
+import { WorkflowDefinition } from '@autonode/shared';
 import { ParseError } from './errors';
 
 export function parseWorkflowFile(filePath: string): WorkflowDefinition {

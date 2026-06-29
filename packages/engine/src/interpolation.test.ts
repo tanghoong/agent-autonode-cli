@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { interpolate, interpolateObject } from './interpolation';
-import { WorkflowContext } from '@taskpipe/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 const ctx: WorkflowContext = {
   trigger: {

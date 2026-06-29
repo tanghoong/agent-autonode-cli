@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { httpRequest } from './http-request';
-import { WorkflowContext } from '@taskpipe/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 const emptyContext: WorkflowContext = {
   trigger: { body: {}, headers: {}, query: {} },

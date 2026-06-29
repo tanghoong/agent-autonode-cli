@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { transformJson } from './transform-json';
-import { WorkflowContext } from '@taskpipe/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 const emptyContext: WorkflowContext = {
   trigger: { body: {}, headers: {}, query: {} },

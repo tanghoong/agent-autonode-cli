@@ -1,5 +1,5 @@
-import { ConnectorType } from '@taskpipe/shared';
-import { ConnectorRegistry, ConnectorFn } from '@taskpipe/engine';
+import { ConnectorType } from '@autonode/shared';
+import { ConnectorRegistry, ConnectorFn } from '@autonode/engine';
 import { httpRequest } from './http-request';
 import { logConnector } from './log';
 import { condition } from './condition';

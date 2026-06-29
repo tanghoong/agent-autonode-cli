@@ -1,6 +1,6 @@
 import * as path from 'path';
 import chalk from 'chalk';
-import { parseWorkflowFile, validateWorkflow } from '@taskpipe/engine';
+import { parseWorkflowFile, validateWorkflow } from '@autonode/engine';
 
 export function registerValidateCommand(program: import('commander').Command): void {
   program

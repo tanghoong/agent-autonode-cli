@@ -1,17 +1,17 @@
-# TaskPipe Quickstart
+# Autonode Quickstart
 
 ## Installation
 
 ```bash
-npm install -g @taskpipe/cli
+npm install -g @autonode/cli
 # or
-pnpm add -g @taskpipe/cli
+pnpm add -g @autonode/cli
 ```
 
 ## Initialize a Project
 
 ```bash
-taskpipe init
+autonode init
 ```
 
 This creates a `workflows/my-workflow.yaml` example file.
@@ -19,48 +19,48 @@ This creates a `workflows/my-workflow.yaml` example file.
 ## Run a Workflow
 
 ```bash
-taskpipe run workflows/my-workflow.yaml
+autonode run workflows/my-workflow.yaml
 ```
 
 ## Validate a Workflow
 
 ```bash
-taskpipe validate workflows/my-workflow.yaml
+autonode validate workflows/my-workflow.yaml
 ```
 
 ## View Logs
 
 ```bash
 # List recent runs
-taskpipe logs
+autonode logs
 
 # View a specific run
-taskpipe logs --run <run-id>
+autonode logs --run <run-id>
 ```
 
 ## Manage Secrets
 
 ```bash
-taskpipe secrets set OPENAI_API_KEY sk-...
-taskpipe secrets list
-taskpipe secrets remove OPENAI_API_KEY
+autonode secrets set OPENAI_API_KEY sk-...
+autonode secrets list
+autonode secrets remove OPENAI_API_KEY
 ```
 
 ## Start Webhook Server
 
 ```bash
-taskpipe webhook start --port 3000
+autonode webhook start --port 3000
 ```
 
 ## Start Schedule Runner
 
 ```bash
-taskpipe schedule start --dir ./workflows
+autonode schedule start --dir ./workflows
 ```
 
 ## Generate Workflows with AI
 
 ```bash
-taskpipe ai "fetch data from an API and send a Slack notification"
-taskpipe ai "summarize a markdown file using GPT" --output workflows/summarize.yaml
+autonode ai "fetch data from an API and send a Slack notification"
+autonode ai "summarize a markdown file using GPT" --output workflows/summarize.yaml
 ```

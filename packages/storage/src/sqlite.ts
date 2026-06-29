@@ -3,10 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { CREATE_TABLES_SQL } from './schema';
-import { RunRecord, StepRecord, RunStatus } from '@taskpipe/shared';
+import { RunRecord, StepRecord, RunStatus } from '@autonode/shared';
 
-const DEFAULT_DB_DIR = path.join(os.homedir(), '.taskpipe');
-const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, 'taskpipe.db');
+const DEFAULT_DB_DIR = path.join(os.homedir(), '.autonode');
+const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, 'autonode.db');
 
 type DbRow = Record<string, string | null>;
 
@@ -14,7 +14,7 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export class TaskPipeStorage {
+export class AutonodeStorage {
   private db: Database.Database;
 
   constructor(dbPath: string = DEFAULT_DB_PATH) {

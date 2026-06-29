@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { TaskPipeStorage } from '@taskpipe/storage';
+import { AutonodeStorage } from '@autonode/storage';
 
 export function registerLogsCommand(program: import('commander').Command): void {
   program
@@ -9,7 +9,7 @@ export function registerLogsCommand(program: import('commander').Command): void 
     .option('--db <path>', 'Path to database file')
     .option('-n, --limit <number>', 'Number of runs to show', '20')
     .action((options: { run?: string; db?: string; limit: string }) => {
-      const storage = new TaskPipeStorage(options.db);
+      const storage = new AutonodeStorage(options.db);
       const limit = parseInt(options.limit, 10);
 
       try {

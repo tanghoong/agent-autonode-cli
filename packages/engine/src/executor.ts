@@ -1,4 +1,4 @@
-import { WorkflowDefinition, WorkflowContext, StepResult, StepDefinition, logger } from '@taskpipe/shared';
+import { WorkflowDefinition, WorkflowContext, StepResult, StepDefinition, logger } from '@autonode/shared';
 import { interpolateObject, interpolate } from './interpolation';
 import { addStepResult } from './context';
 import { ExecutionError, TimeoutError, ConnectorNotFoundError } from './errors';

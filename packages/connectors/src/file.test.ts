@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { fileRead } from './file-read';
 import { fileWrite } from './file-write';
-import { WorkflowContext } from '@taskpipe/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 const emptyContext: WorkflowContext = {
   trigger: { body: {}, headers: {}, query: {} },
@@ -17,7 +17,7 @@ describe('file.read connector', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'taskpipe-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'autonode-test-'));
     // Make cwd point to tmpDir so absolute paths within it pass the traversal check
     vi.spyOn(process, 'cwd').mockReturnValue(tmpDir);
   });
@@ -64,7 +64,7 @@ describe('file.write connector', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'taskpipe-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'autonode-test-'));
     // Make cwd point to tmpDir so relative paths resolve there
     vi.spyOn(process, 'cwd').mockReturnValue(tmpDir);
   });

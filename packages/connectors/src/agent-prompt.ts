@@ -1,4 +1,4 @@
-import { WorkflowContext, StepResult } from '@taskpipe/shared';
+import { WorkflowContext, StepResult } from '@autonode/shared';
 
 interface AgentPromptConfig {
   model?: string;
