@@ -65,6 +65,27 @@ describe('queryJsonPath', () => {
     expect(queryJsonPath(data, '$.items[?(@.active!==true)].name')).toEqual(['b']);
   });
 
+  it('does not leak inherited prototype members', () => {
+    expect(queryJsonPath(data, '$.toString')).toEqual([]);
+    expect(queryJsonPath(data, '$.constructor')).toEqual([]);
+    expect(queryJsonPath(data, '$.__proto__')).toEqual([]);
+    expect(queryJsonPath(data, '$.user.hasOwnProperty')).toEqual([]);
+  });
+
+  it('supports bracket (dashed) keys inside filters', () => {
+    const dashed = {
+      items: [
+        { name: 'a', 'is-active': true },
+        { name: 'b', 'is-active': false },
+      ],
+    };
+    expect(queryJsonPath(dashed, "$.items[?(@['is-active']==true)].name")).toEqual(['a']);
+  });
+
+  it('throws on an unsupported filter path rather than dropping matches', () => {
+    expect(() => queryJsonPath(data, '$.items[?(@[*]==1)]')).toThrow(/unsupported filter path/);
+  });
+
   it('throws on an expression that does not start with $', () => {
     expect(() => queryJsonPath(data, 'user.name')).toThrow(/must start with/);
   });

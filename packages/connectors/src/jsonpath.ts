@@ -34,12 +34,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** True only for the object's own enumerable/defined keys — never the prototype chain. */
+function hasOwn(obj: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 /** Walks a literal property path (e.g. ['user', 'name']) into a value. */
 function getByPath(value: unknown, path: string[]): unknown {
   let current = value;
   for (const key of path) {
     if (isRecord(current)) {
-      current = current[key];
+      current = hasOwn(current, key) ? current[key] : undefined;
     } else if (Array.isArray(current)) {
       current = current[Number(key)];
     } else {
@@ -76,25 +81,80 @@ function parseFilter(content: string, expression: string): Segment {
     if (idx === -1) continue;
     const left = body.slice(0, idx).trim();
     const right = body.slice(idx + op.length).trim();
-    // left is '@' optionally followed by .a.b — strip the leading '@.'
-    const path = left.replace(/^@\.?/, '');
-    const segments = path === '' ? [] : path.split('.');
-    return { kind: 'filter', path: segments, op, value: parsePrimitive(right, expression) };
+    if (!left.startsWith('@')) {
+      throw new Error(`transform.json: filter must reference '@' in expression '${expression}'`);
+    }
+    // Parse the path after '@', supporting both .dot and ['bracket'] members.
+    const path = parseMemberPath(left.slice(1), expression);
+    return { kind: 'filter', path, op, value: parsePrimitive(right, expression) };
   }
   throw new Error(`transform.json: filter needs a comparison operator in expression '${expression}'`);
 }
 
-/** Finds the index of the `]` that closes the `[` at `open`, respecting quotes. */
+/**
+ * Parses a relative member path (the part after `@` in a filter), e.g.
+ * `.user.name` or `['is-active']`, into literal keys. Throws a descriptive
+ * error on unsupported syntax rather than silently treating it as one key.
+ */
+function parseMemberPath(raw: string, expression: string): string[] {
+  const keys: string[] = [];
+  let i = 0;
+  while (i < raw.length) {
+    const ch = raw[i];
+    if (ch === '.') {
+      i++;
+      let name = '';
+      while (i < raw.length && /[\w$]/.test(raw[i])) {
+        name += raw[i];
+        i++;
+      }
+      if (name === '') {
+        throw new Error(`transform.json: invalid filter path in expression '${expression}'`);
+      }
+      keys.push(name);
+    } else if (ch === '[') {
+      const close = findClosingBracket(raw, i);
+      const token = raw.slice(i + 1, close).trim();
+      if (
+        (token.startsWith("'") && token.endsWith("'")) ||
+        (token.startsWith('"') && token.endsWith('"'))
+      ) {
+        keys.push(token.slice(1, -1));
+      } else if (/^-?\d+$/.test(token)) {
+        keys.push(token);
+      } else {
+        throw new Error(
+          `transform.json: unsupported filter path '[${token}]' in expression '${expression}'`
+        );
+      }
+      i = close + 1;
+    } else {
+      throw new Error(
+        `transform.json: unexpected character '${ch}' in filter path of expression '${expression}'`
+      );
+    }
+  }
+  return keys;
+}
+
+/**
+ * Finds the index of the `]` that closes the `[` at `open`, respecting both
+ * quoted strings and nested brackets (e.g. a filter containing `@['key']`).
+ */
 function findClosingBracket(expr: string, open: number): number {
   let quote: string | null = null;
+  let depth = 0;
   for (let i = open + 1; i < expr.length; i++) {
     const ch = expr[i];
     if (quote) {
       if (ch === quote) quote = null;
     } else if (ch === "'" || ch === '"') {
       quote = ch;
+    } else if (ch === '[') {
+      depth++;
     } else if (ch === ']') {
-      return i;
+      if (depth === 0) return i;
+      depth--;
     }
   }
   throw new Error(`transform.json: unbalanced '[' in expression '${expr}'`);
@@ -189,7 +249,7 @@ function compare(actual: unknown, op: ComparisonOperator, expected: Primitive): 
 function applySegment(node: unknown, seg: Segment, out: unknown[]): void {
   switch (seg.kind) {
     case 'member':
-      if (isRecord(node) && seg.name in node) out.push(node[seg.name]);
+      if (isRecord(node) && hasOwn(node, seg.name)) out.push(node[seg.name]);
       break;
     case 'index':
       if (Array.isArray(node)) {
