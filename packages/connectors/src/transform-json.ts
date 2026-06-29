@@ -1,4 +1,5 @@
 import { WorkflowContext, StepResult } from '@autonode/shared';
+import { queryJsonPath } from './jsonpath';
 
 interface TransformJsonConfig {
   input: unknown;
@@ -35,7 +36,12 @@ export async function transformJson(
   config: Record<string, unknown>,
   _context: WorkflowContext
 ): Promise<StepResult> {
-  const { input, template } = config as unknown as TransformJsonConfig;
+  const { input, template, expression } = config as unknown as TransformJsonConfig;
+
+  // `expression` runs a JSONPath query and returns all matches as an array.
+  if (expression !== undefined) {
+    return { output: queryJsonPath(input, expression) };
+  }
 
   if (template !== undefined) {
     const result = applyTemplate(template, input);

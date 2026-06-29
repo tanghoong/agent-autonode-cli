@@ -59,4 +59,29 @@ describe('transform.json connector', () => {
     );
     expect(result.output).toEqual(['Alice', 'active']);
   });
+
+  it('evaluates a JSONPath expression and returns matches as an array', async () => {
+    const result = await transformJson(
+      { input: sampleInput, expression: '$.user.name' },
+      emptyContext
+    );
+    expect(result.output).toEqual(['Alice']);
+  });
+
+  it('evaluates a filtered JSONPath expression over an array', async () => {
+    const input = { items: [{ n: 'a', ok: true }, { n: 'b', ok: false }, { n: 'c', ok: true }] };
+    const result = await transformJson(
+      { input, expression: '$.items[?(@.ok==true)].n' },
+      emptyContext
+    );
+    expect(result.output).toEqual(['a', 'c']);
+  });
+
+  it('prefers expression over template when both are provided', async () => {
+    const result = await transformJson(
+      { input: sampleInput, expression: '$.status', template: '$.user.name' },
+      emptyContext
+    );
+    expect(result.output).toEqual(['active']);
+  });
 });
