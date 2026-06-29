@@ -1,4 +1,4 @@
-import { WorkflowSchema, WorkflowDefinition } from '@taskpipe/shared';
+import { WorkflowSchema, WorkflowDefinition } from '@autonode/shared';
 import { ValidationError } from './errors';
 
 export function validateWorkflow(workflow: unknown): WorkflowDefinition {

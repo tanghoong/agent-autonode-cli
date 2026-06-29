@@ -5,5 +5,5 @@ dist/
 .env
 .env.local
 *.db
-~/.taskpipe/
+~/.autonode/
 .DS_Store

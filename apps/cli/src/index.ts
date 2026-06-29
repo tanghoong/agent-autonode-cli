@@ -12,8 +12,8 @@ import { registerAiCommand } from './commands/ai';
 const program = new Command();
 
 program
-  .name('taskpipe')
-  .description('TaskPipe - Open-source CLI automation engine')
+  .name('autonode')
+  .description('Autonode - Open-source CLI automation engine')
   .version('0.1.0');
 
 registerInitCommand(program);

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { executeWorkflow } from './executor';
 import { createInitialContext } from './context';
 import { ConnectorRegistry } from './executor';
-import { WorkflowDefinition } from '@taskpipe/shared';
+import { WorkflowDefinition } from '@autonode/shared';
 
 function makeWorkflow(overrides: Partial<WorkflowDefinition> = {}): WorkflowDefinition {
   return {

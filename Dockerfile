@@ -12,10 +12,10 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
 # Create a wrapper script pointing to the locally-built CLI
-RUN printf '#!/bin/sh\nexec node /app/apps/cli/dist/index.js "$@"\n' > /usr/local/bin/taskpipe \
-    && chmod +x /usr/local/bin/taskpipe
+RUN printf '#!/bin/sh\nexec node /app/apps/cli/dist/index.js "$@"\n' > /usr/local/bin/autonode \
+    && chmod +x /usr/local/bin/autonode
 
 WORKDIR /workspace
 
-ENTRYPOINT ["taskpipe"]
+ENTRYPOINT ["autonode"]
 CMD ["--help"]

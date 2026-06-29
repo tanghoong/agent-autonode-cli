@@ -1,6 +1,6 @@
-# TaskPipe MVP Feature Checklist
+# Autonode MVP Feature Checklist
 
-This document tracks the implementation status of all planned features for the TaskPipe MVP.
+This document tracks the implementation status of all planned features for the Autonode MVP.
 
 ## ✅ Core Architecture
 
@@ -80,12 +80,12 @@ This document tracks the implementation status of all planned features for the T
 
 ## ✅ CLI Commands (8/8)
 
-- [x] `taskpipe init` - Scaffold new project with example workflow
+- [x] `autonode init` - Scaffold new project with example workflow
   - [x] Create workflows directory
   - [x] Generate example workflow file
   - [x] Project name option
   - [x] Directory option
-- [x] `taskpipe run <workflow>` - Execute a workflow
+- [x] `autonode run <workflow>` - Execute a workflow
   - [x] Parse and validate workflow
   - [x] Execute steps sequentially
   - [x] Dry-run mode (--dry-run)
@@ -93,21 +93,21 @@ This document tracks the implementation status of all planned features for the T
   - [x] Spinner/progress indicators
   - [x] Colored output
   - [x] Run ID tracking
-- [x] `taskpipe validate <workflow>` - Validate workflow syntax
+- [x] `autonode validate <workflow>` - Validate workflow syntax
   - [x] YAML syntax validation
   - [x] Schema validation
   - [x] Error reporting
-- [x] `taskpipe logs` - View execution logs
+- [x] `autonode logs` - View execution logs
   - [x] List all runs
   - [x] Filter by run ID (--run)
   - [x] Display step details
   - [x] Formatted output
-- [x] `taskpipe secrets` - Secret management
+- [x] `autonode secrets` - Secret management
   - [x] `secrets set <key> <value>` - Store secret
   - [x] `secrets list` - List secret keys
   - [x] `secrets remove <key>` - Delete secret
-  - [x] File-based storage (~/.taskpipe/secrets.json)
-- [x] `taskpipe webhook start` - Start webhook server
+  - [x] File-based storage (~/.autonode/secrets.json)
+- [x] `autonode webhook start` - Start webhook server
   - [x] Express server setup
   - [x] Health check endpoint
   - [x] Generic webhook endpoint (/webhook/:id)
@@ -116,7 +116,7 @@ This document tracks the implementation status of all planned features for the T
   - [x] Database integration
   - [x] Async workflow execution
   - [x] Graceful shutdown (SIGTERM, SIGINT)
-- [x] `taskpipe schedule start` - Start cron scheduler
+- [x] `autonode schedule start` - Start cron scheduler
   - [x] node-cron integration
   - [x] Workflow directory scanning
   - [x] Cron expression validation
@@ -124,7 +124,7 @@ This document tracks the implementation status of all planned features for the T
   - [x] Directory option (--dir)
   - [x] Database integration
   - [x] Graceful shutdown
-- [x] `taskpipe ai "<prompt>"` - Generate workflow from natural language
+- [x] `autonode ai "<prompt>"` - Generate workflow from natural language
   - [x] LLM-powered YAML generation
   - [x] Natural language to workflow conversion
   - [x] Output to file option (--output)
@@ -149,7 +149,7 @@ This document tracks the implementation status of all planned features for the T
 - [x] Webhook event logging
   - [x] Event path, method, headers, body storage
   - [x] Timestamp tracking
-- [x] Default database location (~/.taskpipe/taskpipe.db)
+- [x] Default database location (~/.autonode/autonode.db)
 - [x] Custom database path support
 
 ## ✅ Example Workflows (6/6)
@@ -245,4 +245,4 @@ The MVP successfully implements a complete, working CLI automation engine with:
 **Deferred (Testing/QA): ~15** 🔄
 **MVP Completion: 100% of core features** 🎉
 
-The TaskPipe MVP is feature-complete with all planned core functionality implemented. The codebase is ready for initial testing and feedback from users.
+The Autonode MVP is feature-complete with all planned core functionality implemented. The codebase is ready for initial testing and feedback from users.

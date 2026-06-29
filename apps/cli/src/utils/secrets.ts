@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
 
-export const SECRETS_DIR = path.join(os.homedir(), '.taskpipe');
+export const SECRETS_DIR = path.join(os.homedir(), '.autonode');
 export const SECRETS_FILE = path.join(SECRETS_DIR, 'secrets.json');
 export const KEY_FILE = path.join(SECRETS_DIR, 'key');
 

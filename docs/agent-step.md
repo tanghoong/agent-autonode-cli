@@ -7,7 +7,7 @@ The `agent.prompt` connector lets you call AI language models within workflows.
 Set your OpenAI API key:
 
 ```bash
-taskpipe secrets set OPENAI_API_KEY sk-...
+autonode secrets set OPENAI_API_KEY sk-...
 ```
 
 Or set it as an environment variable:

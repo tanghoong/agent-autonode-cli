@@ -1,8 +1,8 @@
 import * as path from 'path';
 import chalk from 'chalk';
-import { TaskPipeStorage } from '@taskpipe/storage';
-import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@taskpipe/engine';
-import { createDefaultRegistry } from '@taskpipe/connectors';
+import { AutonodeStorage } from '@autonode/storage';
+import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
+import { createDefaultRegistry } from '@autonode/connectors';
 import { loadSecrets } from '../utils/secrets';
 
 const WORKFLOWS_BASE_DIR = path.resolve(process.cwd(), 'workflows');
@@ -23,11 +23,11 @@ export function registerWebhookCommand(program: import('commander').Command): vo
       app.use(express.default.json());
       app.use(express.default.urlencoded({ extended: true }));
 
-      const storage = new TaskPipeStorage(options.db);
+      const storage = new AutonodeStorage(options.db);
 
       // Health check
       app.get('/health', (_req, res) => {
-        res.json({ status: 'ok', service: 'taskpipe-webhook' });
+        res.json({ status: 'ok', service: 'autonode-webhook' });
       });
 
       // Generic webhook endpoint - POST /<workflow-path>

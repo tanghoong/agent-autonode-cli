@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import * as fs from 'fs';
-import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@taskpipe/engine';
-import { createDefaultRegistry } from '@taskpipe/connectors';
-import { TaskPipeStorage } from '@taskpipe/storage';
-import { logger } from '@taskpipe/shared';
+import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
+import { createDefaultRegistry } from '@autonode/connectors';
+import { AutonodeStorage } from '@autonode/storage';
+import { logger } from '@autonode/shared';
 import { loadSecrets } from '../utils/secrets';
 
 export function registerScheduleCommand(program: import('commander').Command): void {
@@ -24,7 +24,7 @@ export function registerScheduleCommand(program: import('commander').Command): v
         process.exit(1);
       }
 
-      const storage = new TaskPipeStorage(options.db);
+      const storage = new AutonodeStorage(options.db);
       const connectors = createDefaultRegistry();
       const scheduledTasks: ReturnType<typeof cron.schedule>[] = [];
 

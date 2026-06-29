@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { logConnector } from './log';
-import { logger } from '@taskpipe/shared';
-import { WorkflowContext } from '@taskpipe/shared';
+import { logger } from '@autonode/shared';
+import { WorkflowContext } from '@autonode/shared';
 
 const emptyContext: WorkflowContext = {
   trigger: { body: {}, headers: {}, query: {} },

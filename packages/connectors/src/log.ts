@@ -1,4 +1,4 @@
-import { WorkflowContext, StepResult, logger } from '@taskpipe/shared';
+import { WorkflowContext, StepResult, logger } from '@autonode/shared';
 
 interface LogConfig {
   message: string;

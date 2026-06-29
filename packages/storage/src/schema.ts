@@ -1,4 +1,4 @@
-// Database schema definitions for TaskPipe storage
+// Database schema definitions for Autonode storage
 // Using better-sqlite3 directly (no ORM)
 
 export const CREATE_TABLES_SQL = `

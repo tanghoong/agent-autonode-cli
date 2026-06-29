@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
 import * as path from 'path';
-import { OpenAICompatibleProvider } from '@taskpipe/agent';
+import { OpenAICompatibleProvider } from '@autonode/agent';
 import { loadSecrets } from '../utils/secrets';
 
-const SYSTEM_PROMPT = `You are an expert at creating TaskPipe workflow YAML files.
-TaskPipe is a CLI automation engine that runs workflows defined in YAML.
+const SYSTEM_PROMPT = `You are an expert at creating Autonode workflow YAML files.
+Autonode is a CLI automation engine that runs workflows defined in YAML.
 
 Workflow YAML format:
 \`\`\`yaml
@@ -60,7 +60,7 @@ export function registerAiCommand(program: import('commander').Command): void {
       const apiKey = secrets['OPENAI_API_KEY'] ?? process.env['OPENAI_API_KEY'];
       if (!apiKey) {
         console.log(chalk.red('OPENAI_API_KEY is required. Set it with:'));
-        console.log(chalk.cyan('  taskpipe secrets set OPENAI_API_KEY <your-key>'));
+        console.log(chalk.cyan('  autonode secrets set OPENAI_API_KEY <your-key>'));
         process.exit(1);
       }
 

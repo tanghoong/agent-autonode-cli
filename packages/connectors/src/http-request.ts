@@ -1,4 +1,4 @@
-import { WorkflowContext, StepResult } from '@taskpipe/shared';
+import { WorkflowContext, StepResult } from '@autonode/shared';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 

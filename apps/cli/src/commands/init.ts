@@ -26,7 +26,7 @@ steps:
 export function registerInitCommand(program: import('commander').Command): void {
   program
     .command('init')
-    .description('Initialize a new TaskPipe project with an example workflow')
+    .description('Initialize a new Autonode project with an example workflow')
     .option('-n, --name <name>', 'Project name', 'my-workflow')
     .option('-d, --dir <dir>', 'Directory to initialize in', '.')
     .action((options: { name: string; dir: string }) => {
@@ -46,6 +46,6 @@ export function registerInitCommand(program: import('commander').Command): void 
       console.log(chalk.green('✓') + ` Created workflow: ${workflowFile}`);
       console.log('');
       console.log('Run your workflow with:');
-      console.log(chalk.cyan(`  taskpipe run ${workflowFile}`));
+      console.log(chalk.cyan(`  autonode run ${workflowFile}`));
     });
 }
