@@ -433,7 +433,7 @@ agent-autonode-cli/
 - [x] User-friendly HTTP network error messages
 - [x] Path traversal protection in `file.read` / `file.write`
 - [x] Secrets injected into workflow execution context (run, schedule, webhook)
-- [ ] Integration tests for end-to-end scenarios
+- [x] Integration tests for end-to-end scenarios
 
 ### 🚀 v0.3 — Extensibility
 
