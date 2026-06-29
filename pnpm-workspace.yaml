@@ -1,3 +1,9 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# Allow the native better-sqlite3 addon to compile during install.
+# pnpm >= 9 reads this here; pnpm 8 reads the equivalent `pnpm.onlyBuiltDependencies`
+# field in package.json (and runs build scripts by default anyway).
+onlyBuiltDependencies:
+  - better-sqlite3
