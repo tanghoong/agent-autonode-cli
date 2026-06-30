@@ -52,59 +52,96 @@ export async function executeWorkflow(
   workflow: WorkflowDefinition,
   context: WorkflowContext,
   connectors: ConnectorRegistry,
-  hooks?: {
-    onStepStart?: (stepId: string, stepType: string, input: Record<string, unknown>) => Promise<void>;
-    onStepComplete?: (stepId: string, result: StepResult) => Promise<void>;
-    onStepError?: (stepId: string, error: Error) => Promise<void>;
-  }
+  hooks?: ExecutionHooks
 ): Promise<WorkflowContext> {
   let currentContext = context;
 
   for (const step of workflow.steps) {
-    logger.info(`Executing step: ${step.id} (${step.type})`);
-
-    // Evaluate step condition before running – skip step if condition is falsy
-    if (step.condition) {
-      const evaluatedCondition = interpolate(step.condition, currentContext);
-      const lower = evaluatedCondition.trim().toLowerCase();
-      const conditionMet =
-        lower !== 'false' && lower !== '0' && lower !== 'no' && lower !== '';
-      if (!conditionMet) {
-        logger.info(`Skipping step '${step.id}': condition '${step.condition}' evaluated to false`);
-        continue;
-      }
+    const results = await runStep(step, currentContext, connectors, hooks);
+    for (const [id, result] of Object.entries(results)) {
+      currentContext = addStepResult(currentContext, id, result);
     }
-
-    const connector = connectors.get(step.type);
-    if (!connector) {
-      throw new ConnectorNotFoundError(step.type);
-    }
-
-    const rawConfig = step.with ?? {};
-    const interpolatedConfig = interpolateObject(rawConfig, currentContext) as Record<string, unknown>;
-
-    if (hooks?.onStepStart) {
-      await hooks.onStepStart(step.id, step.type, interpolatedConfig);
-    }
-
-    let result: StepResult;
-    try {
-      result = await runStepWithRetry(step, interpolatedConfig, currentContext, connector);
-    } catch (err) {
-      const error = err as Error;
-      if (hooks?.onStepError) {
-        await hooks.onStepError(step.id, error);
-      }
-      throw new ExecutionError(`Step '${step.id}' failed: ${error.message}`, step.id);
-    }
-
-    if (hooks?.onStepComplete) {
-      await hooks.onStepComplete(step.id, result);
-    }
-
-    currentContext = addStepResult(currentContext, step.id, result);
-    logger.success(`Step '${step.id}' completed`);
   }
 
   return currentContext;
+}
+
+export interface ExecutionHooks {
+  onStepStart?: (stepId: string, stepType: string, input: Record<string, unknown>) => Promise<void>;
+  onStepComplete?: (stepId: string, result: StepResult) => Promise<void>;
+  onStepError?: (stepId: string, error: Error) => Promise<void>;
+}
+
+/** Evaluates a step's `condition` against the context; an absent condition runs. */
+function conditionMet(step: StepDefinition, context: WorkflowContext): boolean {
+  if (!step.condition) return true;
+  const lower = interpolate(step.condition, context).trim().toLowerCase();
+  return lower !== 'false' && lower !== '0' && lower !== 'no' && lower !== '';
+}
+
+/**
+ * Runs a single step against `context` and returns the step results it produced,
+ * keyed by step id. A normal step yields one entry; a parallel group yields one
+ * entry per child. A skipped (condition-false) step yields none.
+ */
+async function runStep(
+  step: StepDefinition,
+  context: WorkflowContext,
+  connectors: ConnectorRegistry,
+  hooks?: ExecutionHooks
+): Promise<Record<string, StepResult>> {
+  if (!conditionMet(step, context)) {
+    logger.info(`Skipping step '${step.id}': condition '${step.condition}' evaluated to false`);
+    return {};
+  }
+
+  // Parallel group: run children concurrently against the SAME context snapshot.
+  // Children cannot observe each other's outputs. Fail-fast — if any child
+  // throws, the group (and the workflow) fails.
+  if (step.parallel) {
+    logger.info(`Executing parallel group '${step.id}' (${step.parallel.length} steps)`);
+    const childResults = await Promise.all(
+      step.parallel.map(child => runStep(child, context, connectors, hooks))
+    );
+    const merged = Object.assign({}, ...childResults) as Record<string, StepResult>;
+    logger.success(`Parallel group '${step.id}' completed`);
+    return merged;
+  }
+
+  const type = step.type;
+  if (!type) {
+    throw new ExecutionError(`Step '${step.id}' has neither 'type' nor 'parallel'`, step.id);
+  }
+
+  logger.info(`Executing step: ${step.id} (${type})`);
+
+  const connector = connectors.get(type);
+  if (!connector) {
+    throw new ConnectorNotFoundError(type);
+  }
+
+  const rawConfig = step.with ?? {};
+  const interpolatedConfig = interpolateObject(rawConfig, context) as Record<string, unknown>;
+
+  if (hooks?.onStepStart) {
+    await hooks.onStepStart(step.id, type, interpolatedConfig);
+  }
+
+  let result: StepResult;
+  try {
+    result = await runStepWithRetry(step, interpolatedConfig, context, connector);
+  } catch (err) {
+    const error = err as Error;
+    if (hooks?.onStepError) {
+      await hooks.onStepError(step.id, error);
+    }
+    throw new ExecutionError(`Step '${step.id}' failed: ${error.message}`, step.id);
+  }
+
+  if (hooks?.onStepComplete) {
+    await hooks.onStepComplete(step.id, result);
+  }
+
+  logger.success(`Step '${step.id}' completed`);
+  return { [step.id]: result };
 }

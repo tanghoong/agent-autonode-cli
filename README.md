@@ -59,7 +59,7 @@
 
 | Category | Highlights |
 |---|---|
-| **Workflow Engine** | YAML parsing, `{{ }}` template interpolation, sequential execution, per-step retry & timeout |
+| **Workflow Engine** | YAML parsing, `{{ }}` template interpolation, sequential + [parallel](docs/parallel.md) execution, per-step retry, timeout & `condition` |
 | **Triggers** | `schedule.trigger` (cron), `webhook.trigger` (HTTP endpoint), manual `run` |
 | **Connectors (7)** | `http.request`, `log`, `condition`, `transform.json`, `agent.prompt`, `file.read`, `file.write` |
 | **LLM / AI** | OpenAI-compatible API, text & JSON output modes, AI workflow generation from natural language |
@@ -437,14 +437,14 @@ agent-autonode-cli/
 - [x] Secrets injected into workflow execution context (run, schedule, webhook)
 - [x] Integration tests for end-to-end scenarios
 
-### 🚀 v0.3 — Extensibility
+### ✅ v0.3 — Extensibility
 
 - [x] Plugin / custom connector system (load connectors from npm packages or local modules)
 - [x] Step `condition` field evaluation (skip steps dynamically)
-- [ ] Parallel step execution groups
+- [x] Parallel step execution groups ([docs](docs/parallel.md))
 - [x] `transform.json` with JSONPath expressions
 
-See [`docs/v0.3-scope.md`](docs/v0.3-scope.md) for the full v0.3 scope and plan.
+v0.3 is complete. See [`docs/v0.3-scope.md`](docs/v0.3-scope.md) for the scope and plan.
 
 ### 🌐 v0.4 — Integrations & UX
 
