@@ -126,4 +126,181 @@ describe('executeWorkflow', () => {
     expect(result.steps['s1']).toEqual({ output: 'recovered' });
     expect(attempts).toBe(3);
   });
+
+  describe('parallel groups', () => {
+    it('runs all children and merges their results into context', async () => {
+      const ctx = createInitialContext();
+      const connectors = new Map();
+      connectors.set('a', async () => ({ output: 'A' }));
+      connectors.set('b', async () => ({ output: 'B' }));
+
+      const workflow: WorkflowDefinition = {
+        name: 'par',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'childA', type: 'a' },
+              { id: 'childB', type: 'b' },
+            ],
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      expect(result.steps['childA']).toEqual({ output: 'A' });
+      expect(result.steps['childB']).toEqual({ output: 'B' });
+      // the group container itself produces no step result
+      expect(result.steps['group']).toBeUndefined();
+    });
+
+    it('runs children concurrently (not sequentially)', async () => {
+      const ctx = createInitialContext();
+      // childA waits on a gate that childB opens. With sequential execution this
+      // would deadlock; concurrency lets both make progress.
+      let openGate: () => void = () => {};
+      const gate = new Promise<void>(resolve => {
+        openGate = resolve;
+      });
+      const connectors = new Map();
+      connectors.set('waiter', async () => {
+        await gate;
+        return { output: 'waited' };
+      });
+      connectors.set('opener', async () => {
+        openGate();
+        return { output: 'opened' };
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'concurrent',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'a', type: 'waiter' },
+              { id: 'b', type: 'opener' },
+            ],
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      expect(result.steps['a']).toEqual({ output: 'waited' });
+      expect(result.steps['b']).toEqual({ output: 'opened' });
+    });
+
+    it('fails the workflow when any child fails (fail-fast)', async () => {
+      const ctx = createInitialContext();
+      const connectors = new Map();
+      connectors.set('ok', async () => ({ output: 'ok' }));
+      connectors.set('bad', async () => {
+        throw new Error('child boom');
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'par-fail',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'good', type: 'ok' },
+              { id: 'bad', type: 'bad' },
+            ],
+          },
+        ],
+      };
+
+      await expect(executeWorkflow(workflow, ctx, connectors)).rejects.toThrow(/child boom/);
+    });
+
+    it('lets in-flight siblings settle before a failing group rejects', async () => {
+      const ctx = createInitialContext();
+      let release: () => void = () => {};
+      const slowDone = new Promise<void>(resolve => {
+        release = resolve;
+      });
+      const connectors = new Map();
+      // fails immediately
+      connectors.set('bad', async () => {
+        throw new Error('fast fail');
+      });
+      // resolves only after we release it, simulating a slower sibling
+      connectors.set('slow', async () => {
+        await slowDone;
+        return { output: 'slow done' };
+      });
+
+      const onStepComplete = vi.fn().mockResolvedValue(undefined);
+      const workflow: WorkflowDefinition = {
+        name: 'settle',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'bad', type: 'bad' },
+              { id: 'slow', type: 'slow' },
+            ],
+          },
+        ],
+      };
+
+      const run = executeWorkflow(workflow, ctx, connectors, { onStepComplete });
+      // release the slow sibling after the fast one has already failed
+      release();
+      await expect(run).rejects.toThrow(/fast fail/);
+      // the slow sibling completed its hook before the group rejected
+      expect(onStepComplete).toHaveBeenCalledWith('slow', { output: 'slow done' });
+    });
+
+    it('skips an entire group when its condition is false', async () => {
+      const ctx = createInitialContext();
+      const childFn = vi.fn().mockResolvedValue({ output: 'x' });
+      const connectors = new Map();
+      connectors.set('c', childFn);
+
+      const workflow: WorkflowDefinition = {
+        name: 'par-cond',
+        steps: [
+          {
+            id: 'group',
+            condition: 'false',
+            parallel: [{ id: 'child', type: 'c' }],
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      expect(childFn).not.toHaveBeenCalled();
+      expect(result.steps['child']).toBeUndefined();
+    });
+
+    it('isolates children — a child cannot read a sibling output', async () => {
+      const ctx = createInitialContext();
+      const seen: Record<string, unknown> = {};
+      const connectors = new Map();
+      connectors.set('producer', async () => ({ output: 'produced' }));
+      connectors.set('reader', async (config: Record<string, unknown>) => {
+        seen.sibling = config.sibling;
+        return { output: 'read' };
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'isolation',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'producer', type: 'producer' },
+              { id: 'reader', type: 'reader', with: { sibling: '{{ steps.producer.output }}' } },
+            ],
+          },
+        ],
+      };
+
+      await executeWorkflow(workflow, ctx, connectors);
+      // sibling output is not visible within the same group → interpolates to ''
+      expect(seen.sibling).toBe('');
+    });
+  });
 });

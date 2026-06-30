@@ -263,6 +263,47 @@ steps:
     storage.close();
   });
 
+  it('runs a parallel group end-to-end and persists each child', async () => {
+    const yaml = `
+name: parallel-pipeline
+steps:
+  - id: fanout
+    parallel:
+      - id: write_a
+        type: file.write
+        with:
+          path: a.txt
+          content: "alpha"
+      - id: write_b
+        type: file.write
+        with:
+          path: b.txt
+          content: "beta"
+  - id: combine
+    type: transform.json
+    with:
+      input:
+        a: "{{ steps.write_a.output }}"
+        b: "{{ steps.write_b.output }}"
+`;
+    const { context, runId, storage } = await runWorkflow(yaml);
+
+    // Both children ran and both files exist.
+    expect(fs.readFileSync(path.join(workDir, 'a.txt'), 'utf-8')).toBe('alpha');
+    expect(fs.readFileSync(path.join(workDir, 'b.txt'), 'utf-8')).toBe('beta');
+    // Child outputs are visible to the later (sequential) step.
+    expect(context.steps.write_a).toBeDefined();
+    expect(context.steps.write_b).toBeDefined();
+    expect(context.steps.fanout).toBeUndefined();
+
+    const run = storage.getRun(runId);
+    expect(run?.status).toBe('success');
+    // Each child is persisted as its own step record (the group container is not).
+    const stepIds = storage.listStepRuns(runId).map(s => s.stepId).sort();
+    expect(stepIds).toEqual(['combine', 'write_a', 'write_b']);
+    storage.close();
+  });
+
   it('rejects an invalid workflow before any run is created', () => {
     // Missing required `steps` array — caught at the validate stage.
     expect(() => validateWorkflow(parseWorkflowYaml('name: no-steps'))).toThrow(/validation failed/i);

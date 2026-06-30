@@ -1,0 +1,70 @@
+# Morning briefing — gather several sources in parallel every weekday at 08:00,
+# distill them with an LLM, and post the result to a chat webhook.
+#
+# Demonstrates: schedule.trigger (cron), parallel step groups, transform.json
+# JSONPath expressions, agent.prompt, and posting to any HTTP endpoint.
+#
+# Secrets used (set with `autonode secrets set <KEY> <value>`):
+#   OPENAI_API_KEY  — for the agent.prompt step
+#   SLACK_WEBHOOK   — an incoming-webhook URL to post the briefing to
+name: morning-briefing
+
+trigger:
+  type: schedule.trigger
+  with:
+    cron: "0 8 * * 1-5" # 08:00, Monday–Friday
+
+steps:
+  # Fetch all sources concurrently — they don't depend on each other.
+  - id: gather
+    parallel:
+      - id: weather
+        type: http.request
+        timeout: 5000
+        retry:
+          attempts: 3
+          delay: 2000
+        with:
+          method: GET
+          url: "https://api.example.com/weather"
+          query:
+            city: "Kuala Lumpur"
+
+      - id: news
+        type: http.request
+        timeout: 5000
+        with:
+          method: GET
+          url: "https://api.example.com/news/top"
+
+  # Pull just the headline titles out of the news payload with JSONPath.
+  - id: headlines
+    type: transform.json
+    with:
+      input: "{{ steps.news.body }}"
+      expression: "$.articles[*].title"
+
+  # Distill everything into a short briefing.
+  - id: brief
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      systemPrompt: "You are a concise assistant. Reply in at most 5 short bullet points."
+      prompt: |
+        Write today's morning briefing.
+        Weather: {{ steps.weather.body }}
+        Top headlines: {{ steps.headlines.output }}
+      output:
+        format: text
+
+  # Post the briefing to a chat webhook (Slack-compatible payload).
+  - id: post
+    type: http.request
+    retry:
+      attempts: 3
+      delay: 5000
+    with:
+      method: POST
+      url: "{{ secrets.SLACK_WEBHOOK }}"
+      body:
+        text: "*Morning briefing*\n{{ steps.brief.output }}"

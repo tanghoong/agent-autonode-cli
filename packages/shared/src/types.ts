@@ -22,11 +22,14 @@ export interface RetryConfig {
 
 export interface StepDefinition {
   id: string;
-  type: string;
+  /** Connector type for a normal step. Omitted for a parallel group. */
+  type?: string;
   with?: Record<string, unknown>;
   retry?: RetryConfig;
   timeout?: number;
   condition?: string;
+  /** Child steps to run concurrently. A step has either `type` or `parallel`. */
+  parallel?: StepDefinition[];
 }
 
 export interface WorkflowDefinition {

@@ -64,4 +64,42 @@ describe('validateWorkflow', () => {
     const result = validateWorkflow(wf);
     expect(result.steps[0].condition).toBe('{{ steps.prev.output }} == 200');
   });
+
+  it('accepts a parallel group step', () => {
+    const wf = {
+      name: 'par-wf',
+      steps: [
+        {
+          id: 'group',
+          parallel: [
+            { id: 'a', type: 'log', with: { message: 'a' } },
+            { id: 'b', type: 'log', with: { message: 'b' } },
+          ],
+        },
+      ],
+    };
+    const result = validateWorkflow(wf);
+    expect(result.steps[0].parallel).toHaveLength(2);
+  });
+
+  it('rejects a step with both type and parallel', () => {
+    expect(() =>
+      validateWorkflow({
+        name: 'bad',
+        steps: [{ id: 'group', type: 'log', parallel: [{ id: 'a', type: 'log' }] }],
+      })
+    ).toThrow(ValidationError);
+  });
+
+  it('rejects a step with neither type nor parallel', () => {
+    expect(() =>
+      validateWorkflow({ name: 'bad', steps: [{ id: 'orphan' }] })
+    ).toThrow(ValidationError);
+  });
+
+  it('rejects an empty parallel group', () => {
+    expect(() =>
+      validateWorkflow({ name: 'bad', steps: [{ id: 'group', parallel: [] }] })
+    ).toThrow(ValidationError);
+  });
 });
