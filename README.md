@@ -346,11 +346,12 @@ Use `{{ ... }}` anywhere in `with` values to reference dynamic data:
 
 ## Example Workflows
 
-Six ready-to-use examples are included in the `examples/` directory:
+Ready-to-use examples are included in the `examples/` directory:
 
 | File | Trigger | Description |
 |---|---|---|
 | `daily-ai-summary.yaml` | Cron (9 AM) | Fetch data → AI summary → POST report |
+| `morning-briefing.yaml` | Cron (8 AM, Mon–Fri) | Gather sources **in parallel** → JSONPath → AI brief → post to chat |
 | `webhook-feedback.yaml` | Webhook | Classify incoming customer feedback with LLM |
 | `github-issue-triage.yaml` | Webhook | Auto-label and prioritise GitHub issues |
 | `local-markdown-summarizer.yaml` | Manual | Read a Markdown file → summarise with AI → write output |
@@ -396,7 +397,7 @@ agent-autonode-cli/
 │   ├── connectors/            # @autonode/connectors — 7 built-in connectors
 │   ├── storage/               # @autonode/storage — SQLite run/step persistence
 │   └── agent/                 # @autonode/agent — LLM client
-├── examples/                  # 6 example workflow YAML files
+├── examples/                  # example workflow YAML files
 ├── docs/                      # Extended documentation
 │   ├── quickstart.md
 │   ├── workflow-syntax.md
