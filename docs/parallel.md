@@ -41,7 +41,9 @@ can read both of their outputs.
 - **Results.** Each child's result is stored under its own `id` (e.g.
   `steps.users`, `steps.orders`). The group's `id` is just a container — it does
   not produce a step result of its own.
-- **Fail-fast.** If any child fails, the group fails and the workflow stops.
+- **Failure handling.** If any child fails, the group fails and the workflow
+  stops. Already-started siblings are awaited to completion first (there is no
+  cancellation), so their step records finalize rather than being left mid-run.
 - **Per-child config.** `retry`, `timeout`, and `condition` apply to each child
   step individually, exactly as they do for sequential steps. A `condition` on
   the group skips the whole group.

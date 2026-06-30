@@ -214,6 +214,45 @@ describe('executeWorkflow', () => {
       await expect(executeWorkflow(workflow, ctx, connectors)).rejects.toThrow(/child boom/);
     });
 
+    it('lets in-flight siblings settle before a failing group rejects', async () => {
+      const ctx = createInitialContext();
+      let release: () => void = () => {};
+      const slowDone = new Promise<void>(resolve => {
+        release = resolve;
+      });
+      const connectors = new Map();
+      // fails immediately
+      connectors.set('bad', async () => {
+        throw new Error('fast fail');
+      });
+      // resolves only after we release it, simulating a slower sibling
+      connectors.set('slow', async () => {
+        await slowDone;
+        return { output: 'slow done' };
+      });
+
+      const onStepComplete = vi.fn().mockResolvedValue(undefined);
+      const workflow: WorkflowDefinition = {
+        name: 'settle',
+        steps: [
+          {
+            id: 'group',
+            parallel: [
+              { id: 'bad', type: 'bad' },
+              { id: 'slow', type: 'slow' },
+            ],
+          },
+        ],
+      };
+
+      const run = executeWorkflow(workflow, ctx, connectors, { onStepComplete });
+      // release the slow sibling after the fast one has already failed
+      release();
+      await expect(run).rejects.toThrow(/fast fail/);
+      // the slow sibling completed its hook before the group rejected
+      expect(onStepComplete).toHaveBeenCalledWith('slow', { output: 'slow done' });
+    });
+
     it('skips an entire group when its condition is false', async () => {
       const ctx = createInitialContext();
       const childFn = vi.fn().mockResolvedValue({ output: 'x' });

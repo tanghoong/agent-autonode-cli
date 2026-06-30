@@ -96,12 +96,25 @@ async function runStep(
   }
 
   // Parallel group: run children concurrently against the SAME context snapshot.
-  // Children cannot observe each other's outputs. Fail-fast — if any child
-  // throws, the group (and the workflow) fails.
+  // Children cannot observe each other's outputs. The group fails if any child
+  // fails, but we wait for every started child to SETTLE first (allSettled, not
+  // all) so in-flight siblings finish their hooks/records — otherwise the caller
+  // could close storage mid-step and leave sibling records stuck as 'running'.
+  // (There is no true cancellation; a failed group still runs siblings to
+  // completion.)
   if (step.parallel) {
     logger.info(`Executing parallel group '${step.id}' (${step.parallel.length} steps)`);
-    const childResults = await Promise.all(
+    const settled = await Promise.allSettled(
       step.parallel.map(child => runStep(child, context, connectors, hooks))
+    );
+    const firstRejection = settled.find(
+      (r): r is PromiseRejectedResult => r.status === 'rejected'
+    );
+    if (firstRejection) {
+      throw firstRejection.reason;
+    }
+    const childResults = settled.map(
+      r => (r as PromiseFulfilledResult<Record<string, StepResult>>).value
     );
     const merged = Object.assign({}, ...childResults) as Record<string, StepResult>;
     logger.success(`Parallel group '${step.id}' completed`);
