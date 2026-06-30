@@ -1,0 +1,50 @@
+# Batch enrichment — fetch a list, enrich each item with a per-item API call
+# using a forEach loop (bounded concurrency), then summarize the results.
+#
+# Demonstrates: forEach loops, the loop variable, bounded concurrency,
+# transform.json JSONPath over the loop output, and agent.prompt.
+#
+# Secrets used (set with `autonode secrets set <KEY> <value>`):
+#   OPENAI_API_KEY  — for the agent.prompt step
+name: batch-enrichment
+
+steps:
+  # 1. Fetch a list of records to process.
+  - id: fetch
+    type: http.request
+    with:
+      method: GET
+      url: "https://api.example.com/users"
+
+  # 2. Enrich each record with its own API call — up to 5 at a time.
+  - id: enrich
+    forEach:
+      items: "{{ steps.fetch.body.users }}"
+      as: user
+      concurrency: 5
+      steps:
+        - id: detail
+          type: http.request
+          timeout: 5000
+          retry:
+            attempts: 2
+            delay: 1000
+          with:
+            method: GET
+            url: "https://api.example.com/users/{{ user.id }}"
+
+  # 3. Pull just the enriched profile bodies out of the loop's output array.
+  - id: profiles
+    type: transform.json
+    with:
+      input: "{{ steps.enrich.output }}"
+      expression: "$[*].detail.body"
+
+  # 4. Summarize everything in one shot.
+  - id: summary
+    type: agent.prompt
+    with:
+      model: "gpt-4.1-mini"
+      prompt: |
+        Write a short summary of these enriched user profiles:
+        {{ steps.profiles.output }}

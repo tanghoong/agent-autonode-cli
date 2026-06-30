@@ -59,7 +59,7 @@
 
 | Category | Highlights |
 |---|---|
-| **Workflow Engine** | YAML parsing, `{{ }}` template interpolation, sequential + [parallel](docs/parallel.md) execution, per-step retry, timeout & `condition` |
+| **Workflow Engine** | YAML parsing, `{{ }}` template interpolation, sequential + [parallel](docs/parallel.md) execution, [`forEach`](docs/foreach.md) loops, per-step retry, timeout & `condition` |
 | **Triggers** | `schedule.trigger` (cron), `webhook.trigger` (HTTP endpoint), manual `run` |
 | **Connectors (7)** | `http.request`, `log`, `condition`, `transform.json`, `agent.prompt`, `file.read`, `file.write` |
 | **LLM / AI** | OpenAI-compatible API, text & JSON output modes, AI workflow generation from natural language |
@@ -352,6 +352,7 @@ Ready-to-use examples are included in the `examples/` directory:
 |---|---|---|
 | `daily-ai-summary.yaml` | Cron (9 AM) | Fetch data → AI summary → POST report |
 | `morning-briefing.yaml` | Cron (8 AM, Mon–Fri) | Gather sources **in parallel** → JSONPath → AI brief → post to chat |
+| `batch-enrichment.yaml` | Manual | Fetch a list → enrich each item via **`forEach`** (bounded concurrency) → summarise |
 | `webhook-feedback.yaml` | Webhook | Classify incoming customer feedback with LLM |
 | `github-issue-triage.yaml` | Webhook | Auto-label and prioritise GitHub issues |
 | `local-markdown-summarizer.yaml` | Manual | Read a Markdown file → summarise with AI → write output |
@@ -449,6 +450,7 @@ v0.3 is complete. See [`docs/v0.3-scope.md`](docs/v0.3-scope.md) for the scope a
 
 ### 🌐 v0.4 — Integrations & UX
 
+- [x] `forEach` loops — run a sub-pipeline per item of a runtime array, with bounded concurrency ([docs](docs/foreach.md))
 - [ ] Database connectors: PostgreSQL, MySQL, MongoDB
 - [ ] Cloud provider steps: AWS S3, GCP Storage, Azure Blob
 - [ ] Slack / Discord / email notification connectors

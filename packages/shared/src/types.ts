@@ -20,16 +20,29 @@ export interface RetryConfig {
   delay?: number;
 }
 
+export interface ForEachConfig {
+  /** A template expression resolving to an array, or an inline array. */
+  items: string | unknown[];
+  /** Name the current item is bound to inside the loop body (default: `item`). */
+  as?: string;
+  /** Max items processed concurrently (default: 1 = sequential). */
+  concurrency?: number;
+  /** Sub-pipeline run once per item. */
+  steps: StepDefinition[];
+}
+
 export interface StepDefinition {
   id: string;
-  /** Connector type for a normal step. Omitted for a parallel group. */
+  /** Connector type for a normal step. Omitted for a parallel group / forEach. */
   type?: string;
   with?: Record<string, unknown>;
   retry?: RetryConfig;
   timeout?: number;
   condition?: string;
-  /** Child steps to run concurrently. A step has either `type` or `parallel`. */
+  /** Child steps to run concurrently. A step sets exactly one of type/parallel/forEach. */
   parallel?: StepDefinition[];
+  /** Run a sub-pipeline once per item of a runtime array. */
+  forEach?: ForEachConfig;
 }
 
 export interface WorkflowDefinition {
@@ -47,6 +60,8 @@ export interface WorkflowContext {
   steps: Record<string, StepResult>;
   env: Record<string, string>;
   secrets: Record<string, string>;
+  /** Loop-scoped variables (e.g. the current `forEach` item), if any. */
+  vars?: Record<string, unknown>;
 }
 
 export interface StepResult {

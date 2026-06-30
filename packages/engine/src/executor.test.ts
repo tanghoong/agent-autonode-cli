@@ -303,4 +303,136 @@ describe('executeWorkflow', () => {
       expect(seen.sibling).toBe('');
     });
   });
+
+  describe('forEach loops', () => {
+    it('runs the sub-pipeline once per item with the item variable bound', async () => {
+      const ctx = createInitialContext({ body: { ids: [1, 2, 3] } });
+      const seen: unknown[] = [];
+      const connectors = new Map();
+      connectors.set('echo', async (config: Record<string, unknown>) => {
+        seen.push(config.value);
+        return { output: config.value };
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'loop',
+        steps: [
+          {
+            id: 'each',
+            forEach: {
+              items: '{{ trigger.body.ids }}',
+              as: 'item',
+              steps: [{ id: 'echo', type: 'echo', with: { value: '{{ item }}' } }],
+            },
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      expect(seen).toEqual([1, 2, 3]);
+      // the loop produces an array of per-item result maps under its own id
+      const out = result.steps['each'].output as Array<Record<string, { output: unknown }>>;
+      expect(out.map(r => r.echo.output)).toEqual([1, 2, 3]);
+    });
+
+    it('binds nested item fields and supports a custom `as` name', async () => {
+      const ctx = createInitialContext({ body: { users: [{ name: 'Ada' }, { name: 'Linus' }] } });
+      const connectors = new Map();
+      connectors.set('greet', async (config: Record<string, unknown>) => ({ output: config.msg }));
+
+      const workflow: WorkflowDefinition = {
+        name: 'loop2',
+        steps: [
+          {
+            id: 'each',
+            forEach: {
+              items: '{{ trigger.body.users }}',
+              as: 'user',
+              steps: [{ id: 'g', type: 'greet', with: { msg: 'Hi {{ user.name }}' } }],
+            },
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      const out = result.steps['each'].output as Array<Record<string, { output: unknown }>>;
+      expect(out.map(r => r.g.output)).toEqual(['Hi Ada', 'Hi Linus']);
+    });
+
+    it('throws when items does not resolve to an array', async () => {
+      const ctx = createInitialContext({ body: { ids: 'nope' } });
+      const connectors = new Map();
+      connectors.set('echo', async () => ({ output: 'x' }));
+
+      const workflow: WorkflowDefinition = {
+        name: 'loop-bad',
+        steps: [
+          {
+            id: 'each',
+            forEach: { items: '{{ trigger.body.ids }}', steps: [{ id: 'e', type: 'echo' }] },
+          },
+        ],
+      };
+
+      await expect(executeWorkflow(workflow, ctx, connectors)).rejects.toThrow(/did not resolve to an array/);
+    });
+
+    it('processes items with bounded concurrency, preserving order', async () => {
+      const ctx = createInitialContext({ body: { ids: [1, 2, 3, 4] } });
+      let active = 0;
+      let maxActive = 0;
+      const connectors = new Map();
+      connectors.set('work', async (config: Record<string, unknown>) => {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise(r => setTimeout(r, 5));
+        active--;
+        return { output: config.value };
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'loop-conc',
+        steps: [
+          {
+            id: 'each',
+            forEach: {
+              items: '{{ trigger.body.ids }}',
+              concurrency: 2,
+              steps: [{ id: 'w', type: 'work', with: { value: '{{ item }}' } }],
+            },
+          },
+        ],
+      };
+
+      const result = await executeWorkflow(workflow, ctx, connectors);
+      const out = result.steps['each'].output as Array<Record<string, { output: unknown }>>;
+      expect(out.map(r => r.w.output)).toEqual([1, 2, 3, 4]); // order preserved
+      expect(maxActive).toBeLessThanOrEqual(2); // concurrency cap respected
+      expect(maxActive).toBeGreaterThan(1); // actually ran concurrently
+    });
+
+    it('fails the loop when an item fails', async () => {
+      const ctx = createInitialContext({ body: { ids: [1, 2, 3] } });
+      const connectors = new Map();
+      connectors.set('maybe', async (config: Record<string, unknown>) => {
+        if (config.value === 2) throw new Error('item 2 boom');
+        return { output: config.value };
+      });
+
+      const workflow: WorkflowDefinition = {
+        name: 'loop-fail',
+        steps: [
+          {
+            id: 'each',
+            forEach: {
+              items: '{{ trigger.body.ids }}',
+              steps: [{ id: 'm', type: 'maybe', with: { value: '{{ item }}' } }],
+            },
+          },
+        ],
+      };
+
+      await expect(executeWorkflow(workflow, ctx, connectors)).rejects.toThrow(/item 2 boom/);
+    });
+  });
 });
