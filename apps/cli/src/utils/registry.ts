@@ -1,19 +1,26 @@
 /**
- * Single place every command obtains its connector registry.
+ * Single place every command obtains its connector registry: the built-in
+ * connectors plus any connectors contributed by configured plugins.
  *
- * Today it returns the built-in connectors. It is intentionally the one seam
- * where connectors contributed by configured plugins will be merged once the
- * plugin loader lands (see docs/v0.3-scope.md, "Feature A"). Keeping every
- * command routed through here means that change is additive and localized.
- *
- * It is async so the future plugin loader (which dynamically imports modules)
- * can slot in without churning any call sites.
+ * It is async because loading plugins resolves and imports modules.
  */
 import { createDefaultRegistry } from '@autonode/connectors';
 import type { ConnectorRegistry } from '@autonode/engine';
+import { loadConfig, type LoadedConfig } from './config';
+import { applyPlugins } from './plugins';
 
-export async function buildRegistry(): Promise<ConnectorRegistry> {
+export interface BuildRegistryOptions {
+  /** Pre-loaded config; loaded from disk when omitted. */
+  config?: LoadedConfig;
+  /** Set false to skip plugins and use built-ins only (e.g. `--no-plugins`). */
+  plugins?: boolean;
+}
+
+export async function buildRegistry(options: BuildRegistryOptions = {}): Promise<ConnectorRegistry> {
   const registry = createDefaultRegistry();
-  // Plugin connectors are merged here in a later v0.3 release.
+  if (options.plugins === false) return registry;
+
+  const config = options.config ?? loadConfig();
+  applyPlugins(registry, config);
   return registry;
 }

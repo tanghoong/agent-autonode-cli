@@ -17,7 +17,7 @@ sensible defaults (no plugins).
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `plugins` | `string[]` | `[]` | npm package names or local module paths that contribute custom connectors. Loaded by the plugin system (arriving in a later v0.3 release). |
+| `plugins` | `string[]` | `[]` | npm package names or local module paths that contribute custom connectors. See [plugins.md](plugins.md). |
 
 Unknown top-level keys are ignored. An invalid file (malformed JSON, or a
 `plugins` value that is not an array of strings) fails fast with a descriptive
