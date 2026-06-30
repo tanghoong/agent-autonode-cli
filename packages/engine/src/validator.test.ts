@@ -144,4 +144,22 @@ describe('validateWorkflow', () => {
       validateWorkflow({ name: 'bad', steps: [{ id: 'each', forEach: { items: '{{ a }}', steps: [] } }] })
     ).toThrow(ValidationError);
   });
+
+  it('rejects a forEach `as` that is not a valid identifier', () => {
+    expect(() =>
+      validateWorkflow({
+        name: 'bad',
+        steps: [{ id: 'each', forEach: { items: '{{ a }}', as: 'user-id', steps: [{ id: 'd', type: 'log' }] } }],
+      })
+    ).toThrow(ValidationError);
+  });
+
+  it('rejects a forEach `as` that shadows a built-in root', () => {
+    expect(() =>
+      validateWorkflow({
+        name: 'bad',
+        steps: [{ id: 'each', forEach: { items: '{{ a }}', as: 'steps', steps: [{ id: 'd', type: 'log' }] } }],
+      })
+    ).toThrow(ValidationError);
+  });
 });

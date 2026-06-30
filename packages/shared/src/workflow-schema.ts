@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Interpolation roots that a forEach `as` name must not shadow.
+const RESERVED_ROOTS = ['trigger', 'steps', 'env', 'secrets'];
+
 const RetryConfigSchema = z.object({
   attempts: z.number().int().positive(),
   delay: z.number().int().nonnegative().optional(),
@@ -41,7 +44,15 @@ const StepDefinitionSchema: z.ZodType<StepDefinitionInput> = z.lazy(() =>
       forEach: z
         .object({
           items: z.union([z.string(), z.array(z.unknown())]),
-          as: z.string().optional(),
+          // Must be a valid identifier (so `{{ <as> }}` resolves) and must not
+          // shadow a built-in interpolation root.
+          as: z
+            .string()
+            .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "forEach 'as' must be a valid identifier")
+            .refine(name => !RESERVED_ROOTS.includes(name), {
+              message: `forEach 'as' must not be one of the reserved names: ${RESERVED_ROOTS.join(', ')}`,
+            })
+            .optional(),
           concurrency: z.number().int().positive().optional(),
           steps: z.array(StepDefinitionSchema).min(1),
         })
