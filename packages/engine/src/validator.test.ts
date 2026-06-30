@@ -102,4 +102,46 @@ describe('validateWorkflow', () => {
       validateWorkflow({ name: 'bad', steps: [{ id: 'group', parallel: [] }] })
     ).toThrow(ValidationError);
   });
+
+  it('accepts a forEach loop step', () => {
+    const wf = {
+      name: 'loop-wf',
+      steps: [
+        {
+          id: 'each',
+          forEach: {
+            items: '{{ trigger.body.ids }}',
+            as: 'item',
+            concurrency: 3,
+            steps: [{ id: 'do', type: 'log', with: { message: '{{ item }}' } }],
+          },
+        },
+      ],
+    };
+    const result = validateWorkflow(wf);
+    expect(result.steps[0].forEach?.steps).toHaveLength(1);
+  });
+
+  it('accepts a forEach with an inline array', () => {
+    const wf = {
+      name: 'loop-inline',
+      steps: [{ id: 'each', forEach: { items: ['a', 'b'], steps: [{ id: 'do', type: 'log' }] } }],
+    };
+    expect(validateWorkflow(wf).steps[0].forEach?.items).toEqual(['a', 'b']);
+  });
+
+  it('rejects a step with both type and forEach', () => {
+    expect(() =>
+      validateWorkflow({
+        name: 'bad',
+        steps: [{ id: 'x', type: 'log', forEach: { items: '{{ a }}', steps: [{ id: 'y', type: 'log' }] } }],
+      })
+    ).toThrow(ValidationError);
+  });
+
+  it('rejects a forEach with no sub-steps', () => {
+    expect(() =>
+      validateWorkflow({ name: 'bad', steps: [{ id: 'each', forEach: { items: '{{ a }}', steps: [] } }] })
+    ).toThrow(ValidationError);
+  });
 });

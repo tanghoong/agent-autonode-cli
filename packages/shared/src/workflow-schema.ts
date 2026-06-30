@@ -18,6 +18,12 @@ type StepDefinitionInput = {
   timeout?: number;
   condition?: string;
   parallel?: StepDefinitionInput[];
+  forEach?: {
+    items: string | unknown[];
+    as?: string;
+    concurrency?: number;
+    steps: StepDefinitionInput[];
+  };
 };
 
 const StepDefinitionSchema: z.ZodType<StepDefinitionInput> = z.lazy(() =>
@@ -31,10 +37,21 @@ const StepDefinitionSchema: z.ZodType<StepDefinitionInput> = z.lazy(() =>
       condition: z.string().optional(),
       // A parallel group runs its child steps concurrently.
       parallel: z.array(StepDefinitionSchema).min(1).optional(),
+      // A forEach loop runs its sub-pipeline once per item of a runtime array.
+      forEach: z
+        .object({
+          items: z.union([z.string(), z.array(z.unknown())]),
+          as: z.string().optional(),
+          concurrency: z.number().int().positive().optional(),
+          steps: z.array(StepDefinitionSchema).min(1),
+        })
+        .optional(),
     })
-    .refine(step => (step.type === undefined) !== (step.parallel === undefined), {
-      message: "a step must set exactly one of 'type' or 'parallel'",
-    })
+    .refine(
+      step =>
+        [step.type, step.parallel, step.forEach].filter(value => value !== undefined).length === 1,
+      { message: "a step must set exactly one of 'type', 'parallel', or 'forEach'" }
+    )
 );
 
 export const WorkflowSchema = z.object({

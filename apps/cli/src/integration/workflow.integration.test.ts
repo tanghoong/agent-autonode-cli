@@ -304,6 +304,47 @@ steps:
     storage.close();
   });
 
+  it('runs a forEach loop end-to-end and exposes per-item results', async () => {
+    const yaml = `
+name: foreach-pipeline
+steps:
+  - id: write_each
+    forEach:
+      items: "{{ trigger.body.names }}"
+      as: name
+      steps:
+        - id: save
+          type: file.write
+          with:
+            path: "out/{{ name }}.txt"
+            content: "hello {{ name }}"
+  - id: count
+    type: transform.json
+    with:
+      input: "{{ steps.write_each.output }}"
+      expression: "$[*].save.output"
+`;
+    const { context, runId, storage } = await runWorkflow(yaml, {
+      triggerData: { body: { names: ['ada', 'linus'] } },
+    });
+
+    // A file was written per item.
+    expect(fs.readFileSync(path.join(workDir, 'out/ada.txt'), 'utf-8')).toBe('hello ada');
+    expect(fs.readFileSync(path.join(workDir, 'out/linus.txt'), 'utf-8')).toBe('hello linus');
+
+    // The loop exposes an array of per-item result maps under its id.
+    const loopOut = context.steps.write_each.output as Array<Record<string, { output: string }>>;
+    expect(loopOut).toHaveLength(2);
+    expect(loopOut[0].save.output).toContain('ada.txt');
+
+    // The loop is recorded as a single step (sub-steps are not individually recorded).
+    const run = storage.getRun(runId);
+    expect(run?.status).toBe('success');
+    const stepIds = storage.listStepRuns(runId).map(s => s.stepId).sort();
+    expect(stepIds).toEqual(['count', 'write_each']);
+    storage.close();
+  });
+
   it('rejects an invalid workflow before any run is created', () => {
     // Missing required `steps` array — caught at the validate stage.
     expect(() => validateWorkflow(parseWorkflowYaml('name: no-steps'))).toThrow(/validation failed/i);

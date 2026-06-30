@@ -121,9 +121,20 @@ async function runStep(
     return merged;
   }
 
+  // forEach loop: run the sub-pipeline once per item of a runtime array. The
+  // loop is one logical step — its result is an array of per-item output maps
+  // (keyed by sub-step id), exposed as `steps.<id>.output`. Sub-steps see the
+  // current item via `{{ <as> }}` and the pre-loop context, but not other items.
+  if (step.forEach) {
+    return runForEach(step, context, connectors, hooks);
+  }
+
   const type = step.type;
   if (!type) {
-    throw new ExecutionError(`Step '${step.id}' has neither 'type' nor 'parallel'`, step.id);
+    throw new ExecutionError(
+      `Step '${step.id}' has none of 'type', 'parallel', or 'forEach'`,
+      step.id
+    );
   }
 
   logger.info(`Executing step: ${step.id} (${type})`);
@@ -156,5 +167,101 @@ async function runStep(
   }
 
   logger.success(`Step '${step.id}' completed`);
+  return { [step.id]: result };
+}
+
+/**
+ * Runs `items` through `worker` with at most `limit` in flight at once. On the
+ * first worker error, stops pulling new items (in-flight ones settle) and
+ * rethrows that error — mirroring the fail-fast-after-settle behavior of
+ * parallel groups. Results preserve input order.
+ */
+async function runPool<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  let firstError: Error | undefined;
+
+  const runWorker = async (): Promise<void> => {
+    for (;;) {
+      if (firstError) return;
+      const index = nextIndex++;
+      if (index >= items.length) return;
+      try {
+        results[index] = await worker(items[index], index);
+      } catch (err) {
+        if (!firstError) firstError = err as Error;
+        return;
+      }
+    }
+  };
+
+  const poolSize = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: poolSize }, () => runWorker()));
+
+  if (firstError) throw firstError;
+  return results;
+}
+
+/** Executes a `forEach` loop step. */
+async function runForEach(
+  step: StepDefinition,
+  context: WorkflowContext,
+  connectors: ConnectorRegistry,
+  hooks?: ExecutionHooks
+): Promise<Record<string, StepResult>> {
+  const loop = step.forEach!;
+  const items = interpolateObject(loop.items, context) as unknown;
+  if (!Array.isArray(items)) {
+    throw new ExecutionError(`forEach '${step.id}': 'items' did not resolve to an array`, step.id);
+  }
+
+  const as = loop.as ?? 'item';
+  const concurrency = Math.max(1, loop.concurrency ?? 1);
+  logger.info(`Executing forEach '${step.id}' over ${items.length} item(s)`);
+
+  if (hooks?.onStepStart) {
+    await hooks.onStepStart(step.id, 'forEach', { items: items.length });
+  }
+
+  // One item: run the sub-pipeline against the pre-loop context plus the item
+  // variable. Sub-steps run without the outer hooks (the loop is recorded as a
+  // single step) and see each other within the same iteration, but not siblings.
+  const runItem = async (item: unknown): Promise<Record<string, StepResult>> => {
+    let itemContext: WorkflowContext = {
+      ...context,
+      vars: { ...(context.vars ?? {}), [as]: item },
+    };
+    const itemResults: Record<string, StepResult> = {};
+    for (const child of loop.steps) {
+      const produced = await runStep(child, itemContext, connectors);
+      for (const [id, res] of Object.entries(produced)) {
+        itemResults[id] = res;
+        itemContext = addStepResult(itemContext, id, res);
+      }
+    }
+    return itemResults;
+  };
+
+  let result: StepResult;
+  try {
+    const perItem = await runPool(items, concurrency, runItem);
+    result = { output: perItem };
+  } catch (err) {
+    const error = err as Error;
+    if (hooks?.onStepError) {
+      await hooks.onStepError(step.id, error);
+    }
+    throw new ExecutionError(`forEach '${step.id}' failed: ${error.message}`, step.id);
+  }
+
+  if (hooks?.onStepComplete) {
+    await hooks.onStepComplete(step.id, result);
+  }
+
+  logger.success(`forEach '${step.id}' completed`);
   return { [step.id]: result };
 }

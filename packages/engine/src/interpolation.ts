@@ -23,6 +23,9 @@ function resolveExpression(expr: string, context: WorkflowContext): unknown {
     return rest.length > 0 ? context.env[rest[0]] : undefined;
   } else if (root === 'secrets') {
     return rest.length > 0 ? context.secrets[rest[0]] : undefined;
+  } else if (context.vars && root in context.vars) {
+    // Loop-scoped variables (e.g. the current `forEach` item).
+    return rest.length > 0 ? getNestedValue(context.vars[root], rest) : context.vars[root];
   }
   return undefined;
 }
