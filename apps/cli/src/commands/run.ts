@@ -29,6 +29,11 @@ export function registerRunCommand(program: import('commander').Command): void {
           return;
         }
 
+        // Build the registry (which may load plugins and can fail) before
+        // recording a run, so a plugin/config error never leaves an orphaned
+        // 'pending' run in the history.
+        const connectors = await buildRegistry({ plugins: options.plugins });
+
         const storage = new AutonodeStorage(options.db);
         const runRecord = storage.createRun(workflow.name, workflow.trigger?.type ?? 'manual');
 
@@ -36,7 +41,6 @@ export function registerRunCommand(program: import('commander').Command): void {
         console.log('');
 
         const context = createInitialContext({}, loadSecrets());
-        const connectors = await buildRegistry({ plugins: options.plugins });
 
         const stepRecords = new Map<string, string>();
 

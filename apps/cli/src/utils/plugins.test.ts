@@ -2,8 +2,9 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { createDefaultRegistry } from '@autonode/connectors';
 import { loadConfig, CONFIG_FILENAME } from './config';
-import { loadPlugins } from './plugins';
+import { loadPlugins, applyPlugins } from './plugins';
 import { buildRegistry } from './registry';
 
 describe('plugin loader', () => {
@@ -79,6 +80,25 @@ describe('plugin loader', () => {
       `module.exports = { name: 'bad', connectors: { 'log': async () => ({}) } };`
     );
     await expect(buildRegistry({ config })).rejects.toThrow(/conflicts with an existing connector/);
+  });
+
+  it('applyPlugins merges into a registry and returns the loaded plugins', () => {
+    const config = setup(
+      `module.exports = { name: 'demo', connectors: { 'demo.echo': async () => ({}) } };`
+    );
+    const registry = createDefaultRegistry();
+    const loaded = applyPlugins(registry, config);
+    expect(loaded.map(p => p.name)).toEqual(['demo']);
+    expect(registry.has('demo.echo')).toBe(true);
+  });
+
+  it('applyPlugins surfaces collisions (the path plugins list uses)', () => {
+    const config = setup(
+      `module.exports = { name: 'bad', connectors: { 'log': async () => ({}) } };`
+    );
+    expect(() => applyPlugins(createDefaultRegistry(), config)).toThrow(
+      /conflicts with an existing connector/
+    );
   });
 
   it('throws when a plugin has no name', () => {

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { createDefaultRegistry } from '@autonode/connectors';
 import { loadConfig } from '../utils/config';
-import { loadPlugins } from '../utils/plugins';
+import { applyPlugins } from '../utils/plugins';
 
 export function registerPluginsCommand(program: import('commander').Command): void {
   const plugins = program.command('plugins').description('Inspect connectors and configured plugins');
@@ -30,7 +30,9 @@ export function registerPluginsCommand(program: import('commander').Command): vo
       }
 
       try {
-        const loaded = loadPlugins(config);
+        // Use the same merge path the runners use so collisions (and load or
+        // validation errors) surface here rather than only at run time.
+        const loaded = applyPlugins(createDefaultRegistry(), config);
         console.log(chalk.bold('Plugins:'));
         for (const plugin of loaded) {
           const types = Object.keys(plugin.connectors).sort();

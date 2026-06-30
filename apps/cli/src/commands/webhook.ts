@@ -24,8 +24,10 @@ export function registerWebhookCommand(program: import('commander').Command): vo
       app.use(express.default.json());
       app.use(express.default.urlencoded({ extended: true }));
 
-      const storage = new AutonodeStorage(options.db);
+      // Build the registry (which may load plugins and can fail) before opening
+      // storage, so a plugin/config error doesn't leave a database handle open.
       const connectors = await buildRegistry({ plugins: options.plugins });
+      const storage = new AutonodeStorage(options.db);
 
       // Health check
       app.get('/health', (_req, res) => {

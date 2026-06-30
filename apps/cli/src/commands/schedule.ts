@@ -25,8 +25,10 @@ export function registerScheduleCommand(program: import('commander').Command): v
         process.exit(1);
       }
 
-      const storage = new AutonodeStorage(options.db);
+      // Build the registry (which may load plugins and can fail) before opening
+      // storage, so a plugin/config error doesn't leave a database handle open.
       const connectors = await buildRegistry({ plugins: options.plugins });
+      const storage = new AutonodeStorage(options.db);
       const scheduledTasks: ReturnType<typeof cron.schedule>[] = [];
 
       console.log(chalk.blue('Scanning for scheduled workflows in:'), workflowsDir);
