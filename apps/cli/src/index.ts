@@ -8,6 +8,7 @@ import { registerSecretsCommand } from './commands/secrets';
 import { registerWebhookCommand } from './commands/webhook';
 import { registerScheduleCommand } from './commands/schedule';
 import { registerAiCommand } from './commands/ai';
+import { registerPluginsCommand } from './commands/plugins';
 
 const program = new Command();
 
@@ -24,5 +25,6 @@ registerSecretsCommand(program);
 registerWebhookCommand(program);
 registerScheduleCommand(program);
 registerAiCommand(program);
+registerPluginsCommand(program);
 
 program.parse(process.argv);

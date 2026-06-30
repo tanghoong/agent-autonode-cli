@@ -2,8 +2,8 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { AutonodeStorage } from '@autonode/storage';
 import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
-import { createDefaultRegistry } from '@autonode/connectors';
 import { loadSecrets } from '../utils/secrets';
+import { buildRegistry } from '../utils/registry';
 
 const WORKFLOWS_BASE_DIR = path.resolve(process.cwd(), 'workflows');
 
@@ -24,6 +24,7 @@ export function registerWebhookCommand(program: import('commander').Command): vo
       app.use(express.default.urlencoded({ extended: true }));
 
       const storage = new AutonodeStorage(options.db);
+      const connectors = await buildRegistry();
 
       // Health check
       app.get('/health', (_req, res) => {
@@ -71,7 +72,6 @@ export function registerWebhookCommand(program: import('commander').Command): vo
           storage.updateRun(run.id, 'running');
 
           const context = createInitialContext({ body, headers, query }, loadSecrets());
-          const connectors = createDefaultRegistry();
 
           // Run async
           executeWorkflow(workflow, context, connectors)
