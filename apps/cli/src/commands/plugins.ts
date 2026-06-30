@@ -1,6 +1,7 @@
 import chalk from 'chalk';
+import { createDefaultRegistry } from '@autonode/connectors';
 import { loadConfig } from '../utils/config';
-import { buildRegistry } from '../utils/registry';
+import { loadPlugins } from '../utils/plugins';
 
 export function registerPluginsCommand(program: import('commander').Command): void {
   const plugins = program.command('plugins').description('Inspect connectors and configured plugins');
@@ -8,12 +9,11 @@ export function registerPluginsCommand(program: import('commander').Command): vo
   plugins
     .command('list')
     .description('List available connectors and configured plugins')
-    .action(async () => {
+    .action(() => {
       const config = loadConfig();
-      const registry = await buildRegistry();
 
-      console.log(chalk.bold('Connectors:'));
-      for (const type of [...registry.keys()].sort()) {
+      console.log(chalk.bold('Built-in connectors:'));
+      for (const type of [...createDefaultRegistry().keys()].sort()) {
         console.log('  ' + chalk.cyan(type));
       }
       console.log('');
@@ -24,14 +24,24 @@ export function registerPluginsCommand(program: import('commander').Command): vo
         console.log(chalk.dim('No autonode.config.json found — using defaults.'));
       }
 
-      if (config.plugins.length > 0) {
-        console.log(chalk.bold('Configured plugins:'));
-        for (const plugin of config.plugins) {
-          console.log('  ' + chalk.yellow(plugin));
-        }
-        console.log(chalk.dim('(Plugin loading arrives in a later v0.3 release.)'));
-      } else {
+      if (config.plugins.length === 0) {
         console.log('No plugins configured.');
+        return;
+      }
+
+      try {
+        const loaded = loadPlugins(config);
+        console.log(chalk.bold('Plugins:'));
+        for (const plugin of loaded) {
+          const types = Object.keys(plugin.connectors).sort();
+          console.log('  ' + chalk.yellow(plugin.name) + chalk.dim(` (${plugin.specifier})`));
+          for (const type of types) {
+            console.log('    ' + chalk.cyan(type));
+          }
+        }
+      } catch (err) {
+        console.log(chalk.red('Failed to load plugins: ') + (err as Error).message);
+        process.exitCode = 1;
       }
     });
 }

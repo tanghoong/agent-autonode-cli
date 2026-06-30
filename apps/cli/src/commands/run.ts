@@ -13,7 +13,8 @@ export function registerRunCommand(program: import('commander').Command): void {
     .description('Run a workflow file')
     .option('--dry-run', 'Parse and validate only, do not execute')
     .option('--db <path>', 'Path to database file')
-    .action(async (workflowPath: string, options: { dryRun?: boolean; db?: string }) => {
+    .option('--no-plugins', 'Disable loading connectors from plugins')
+    .action(async (workflowPath: string, options: { dryRun?: boolean; db?: string; plugins?: boolean }) => {
       const spinner = ora('Loading workflow...').start();
 
       try {
@@ -35,7 +36,7 @@ export function registerRunCommand(program: import('commander').Command): void {
         console.log('');
 
         const context = createInitialContext({}, loadSecrets());
-        const connectors = await buildRegistry();
+        const connectors = await buildRegistry({ plugins: options.plugins });
 
         const stepRecords = new Map<string, string>();
 

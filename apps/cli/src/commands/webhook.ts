@@ -15,7 +15,8 @@ export function registerWebhookCommand(program: import('commander').Command): vo
     .description('Start the webhook server')
     .option('-p, --port <port>', 'Port to listen on', '3000')
     .option('--db <path>', 'Path to database file')
-    .action(async (options: { port: string; db?: string }) => {
+    .option('--no-plugins', 'Disable loading connectors from plugins')
+    .action(async (options: { port: string; db?: string; plugins?: boolean }) => {
       const express = await import('express');
       const app = express.default();
       const port = parseInt(options.port, 10);
@@ -24,7 +25,7 @@ export function registerWebhookCommand(program: import('commander').Command): vo
       app.use(express.default.urlencoded({ extended: true }));
 
       const storage = new AutonodeStorage(options.db);
-      const connectors = await buildRegistry();
+      const connectors = await buildRegistry({ plugins: options.plugins });
 
       // Health check
       app.get('/health', (_req, res) => {

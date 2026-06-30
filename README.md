@@ -65,6 +65,7 @@
 | **LLM / AI** | OpenAI-compatible API, text & JSON output modes, AI workflow generation from natural language |
 | **CLI Commands (9)** | `init`, `run`, `validate`, `logs`, `secrets`, `webhook`, `schedule`, `ai`, `plugins` |
 | **Configuration** | `autonode.config.json` (project config, discovered by walking up from the cwd) — see [docs/configuration.md](docs/configuration.md) |
+| **Plugins** | Custom connectors loaded from npm packages or local modules via `autonode.config.json` — see [docs/plugins.md](docs/plugins.md) |
 | **Storage** | SQLite persistence for run history and step-level audit trail |
 | **Secrets** | File-based secret store (`~/.autonode/secrets.json`), accessible in templates via `{{ secrets.KEY }}` |
 | **DevOps** | Dockerfile, docker-compose, GitHub Actions CI |
@@ -438,7 +439,7 @@ agent-autonode-cli/
 
 ### 🚀 v0.3 — Extensibility
 
-- [ ] Plugin / custom connector system (load connectors from npm packages)
+- [x] Plugin / custom connector system (load connectors from npm packages or local modules)
 - [x] Step `condition` field evaluation (skip steps dynamically)
 - [ ] Parallel step execution groups
 - [x] `transform.json` with JSONPath expressions

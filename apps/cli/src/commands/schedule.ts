@@ -15,7 +15,8 @@ export function registerScheduleCommand(program: import('commander').Command): v
     .description('Start the schedule runner')
     .option('-d, --dir <dir>', 'Directory to scan for workflow files', './workflows')
     .option('--db <path>', 'Path to database file')
-    .action(async (options: { dir: string; db?: string }) => {
+    .option('--no-plugins', 'Disable loading connectors from plugins')
+    .action(async (options: { dir: string; db?: string; plugins?: boolean }) => {
       const cron = await import('node-cron');
       const workflowsDir = path.resolve(options.dir);
 
@@ -25,7 +26,7 @@ export function registerScheduleCommand(program: import('commander').Command): v
       }
 
       const storage = new AutonodeStorage(options.db);
-      const connectors = await buildRegistry();
+      const connectors = await buildRegistry({ plugins: options.plugins });
       const scheduledTasks: ReturnType<typeof cron.schedule>[] = [];
 
       console.log(chalk.blue('Scanning for scheduled workflows in:'), workflowsDir);
