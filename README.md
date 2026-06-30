@@ -63,7 +63,8 @@
 | **Triggers** | `schedule.trigger` (cron), `webhook.trigger` (HTTP endpoint), manual `run` |
 | **Connectors (7)** | `http.request`, `log`, `condition`, `transform.json`, `agent.prompt`, `file.read`, `file.write` |
 | **LLM / AI** | OpenAI-compatible API, text & JSON output modes, AI workflow generation from natural language |
-| **CLI Commands (8)** | `init`, `run`, `validate`, `logs`, `secrets`, `webhook`, `schedule`, `ai` |
+| **CLI Commands (9)** | `init`, `run`, `validate`, `logs`, `secrets`, `webhook`, `schedule`, `ai`, `plugins` |
+| **Configuration** | `autonode.config.json` (project config, discovered by walking up from the cwd) — see [docs/configuration.md](docs/configuration.md) |
 | **Storage** | SQLite persistence for run history and step-level audit trail |
 | **Secrets** | File-based secret store (`~/.autonode/secrets.json`), accessible in templates via `{{ secrets.KEY }}` |
 | **DevOps** | Dockerfile, docker-compose, GitHub Actions CI |

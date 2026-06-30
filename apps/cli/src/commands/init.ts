@@ -23,6 +23,11 @@ steps:
       message: "Fetched data: {{ steps.fetch_data.body }}"
 `;
 
+const EXAMPLE_CONFIG = `{
+  "plugins": []
+}
+`;
+
 export function registerInitCommand(program: import('commander').Command): void {
   program
     .command('init')
@@ -44,6 +49,13 @@ export function registerInitCommand(program: import('commander').Command): void 
 
       fs.writeFileSync(workflowFile, EXAMPLE_WORKFLOW);
       console.log(chalk.green('✓') + ` Created workflow: ${workflowFile}`);
+
+      const configFile = path.resolve(options.dir, 'autonode.config.json');
+      if (!fs.existsSync(configFile)) {
+        fs.writeFileSync(configFile, EXAMPLE_CONFIG);
+        console.log(chalk.green('✓') + ` Created config: ${configFile}`);
+      }
+
       console.log('');
       console.log('Run your workflow with:');
       console.log(chalk.cyan(`  autonode run ${workflowFile}`));

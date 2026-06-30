@@ -2,10 +2,10 @@ import chalk from 'chalk';
 import * as path from 'path';
 import * as fs from 'fs';
 import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
-import { createDefaultRegistry } from '@autonode/connectors';
 import { AutonodeStorage } from '@autonode/storage';
 import { logger } from '@autonode/shared';
 import { loadSecrets } from '../utils/secrets';
+import { buildRegistry } from '../utils/registry';
 
 export function registerScheduleCommand(program: import('commander').Command): void {
   const schedule = program.command('schedule').description('Schedule runner commands');
@@ -25,7 +25,7 @@ export function registerScheduleCommand(program: import('commander').Command): v
       }
 
       const storage = new AutonodeStorage(options.db);
-      const connectors = createDefaultRegistry();
+      const connectors = await buildRegistry();
       const scheduledTasks: ReturnType<typeof cron.schedule>[] = [];
 
       console.log(chalk.blue('Scanning for scheduled workflows in:'), workflowsDir);

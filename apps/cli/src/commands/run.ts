@@ -2,10 +2,10 @@ import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { parseWorkflowFile, validateWorkflow, executeWorkflow, createInitialContext } from '@autonode/engine';
-import { createDefaultRegistry } from '@autonode/connectors';
 import { AutonodeStorage } from '@autonode/storage';
 import { logger, StepResult } from '@autonode/shared';
 import { loadSecrets } from '../utils/secrets';
+import { buildRegistry } from '../utils/registry';
 
 export function registerRunCommand(program: import('commander').Command): void {
   program
@@ -35,7 +35,7 @@ export function registerRunCommand(program: import('commander').Command): void {
         console.log('');
 
         const context = createInitialContext({}, loadSecrets());
-        const connectors = createDefaultRegistry();
+        const connectors = await buildRegistry();
 
         const stepRecords = new Map<string, string>();
 
